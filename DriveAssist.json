@@ -27,6 +27,7 @@
                     "domain": "Library",
                     "responsible": "",
                     "type": "allocationtargetfunml",
+                    "componenttype":"Zusammenbau",
                     "url": "mdel://0dd2ef82-0b49-4ef0-985b-236b749130cd?projectID\u003dtwcloud%3A%2F98fb10b6-3535-4c6a-862c-d41b539554ab%2Fd470aa0a-ffff-4397-94ec-f7aa13610003\u0026serverType\u003desiserver\u0026projectBranch\u003dVE\u0026serverName\u003dmagicdraw-prod.bmwgroup.net%3A27110\u0026projectName\u003dBoardnet+Architecture+SP2025\u0026elementName\u003dAllocation+Target+%5BFunML%5D+MARS\u0026metaType\u003dClass\u0026elementQName\u003dLibrary%3A%3AAllocationTargets%3A%3AOnboard+ECUs%3A%3AMARS"
                 }
             },
@@ -97,6 +98,7 @@
                     "domain": "Library",
                     "responsible": "",
                     "type": "allocationtargetfunml",
+                    "componenttype":"ECU",
                     "url": "mdel://4b7b3030-3a24-45a0-8d2d-d34e61d65b07?projectID\u003dtwcloud%3A%2F98fb10b6-3535-4c6a-862c-d41b539554ab%2Fd470aa0a-ffff-4397-94ec-f7aa13610003\u0026serverType\u003desiserver\u0026projectBranch\u003dVE\u0026serverName\u003dmagicdraw-prod.bmwgroup.net%3A27110\u0026projectName\u003dBoardnet+Architecture+SP2025\u0026elementName\u003dAllocation+Target+%5BFunML%5D+IKS_Basis\u0026metaType\u003dClass\u0026elementQName\u003dLibrary%3A%3AAllocationTargets%3A%3AOnboard+ECUs%3A%3AIKS_Basis"
                 }
             },
@@ -167,6 +169,7 @@
                     "domain": "Library",
                     "responsible": "",
                     "type": "allocationtargetfunml",
+                    "componenttype":"Sensor",
                     "url": "mdel://30175eb3-1ea6-4e0a-bcb1-1c8daa067204?projectID\u003dtwcloud%3A%2F98fb10b6-3535-4c6a-862c-d41b539554ab%2Fd470aa0a-ffff-4397-94ec-f7aa13610003\u0026serverType\u003desiserver\u0026projectBranch\u003dVE\u0026serverName\u003dmagicdraw-prod.bmwgroup.net%3A27110\u0026projectName\u003dBoardnet+Architecture+SP2025\u0026elementName\u003dAllocation+Target+%5BFunML%5D+SFS_EFZ\u0026metaType\u003dClass\u0026elementQName\u003dLibrary%3A%3AAllocationTargets%3A%3AOnboard+ECUs%3A%3ASFS_EFZ"
                 }
             },
@@ -279,6 +282,7 @@
                     "domain": "Library",
                     "responsible": "",
                     "type": "allocationtargetfunml",
+                    "componenttype":"Actuator",
                     "url": "mdel://cea9dc7f-5d8c-4058-9386-b68dfd001d8b?projectID\u003dtwcloud%3A%2F98fb10b6-3535-4c6a-862c-d41b539554ab%2Fd470aa0a-ffff-4397-94ec-f7aa13610003\u0026serverType\u003desiserver\u0026projectBranch\u003dVE\u0026serverName\u003dmagicdraw-prod.bmwgroup.net%3A27110\u0026projectName\u003dBoardnet+Architecture+SP2025\u0026elementName\u003dAllocation+Target+%5BFunML%5D+ICON\u0026metaType\u003dClass\u0026elementQName\u003dLibrary%3A%3AAllocationTargets%3A%3AOnboard+ECUs%3A%3AICON"
                 }
             },
@@ -321,6 +325,7 @@
                     "domain": "Library",
                     "responsible": "",
                     "type": "allocationtargetfunml",
+                    "componenttype":"Zusammenbau",
                     "url": "mdel://51e885e4-6772-4323-baaf-1c3734cdf783?projectID\u003dtwcloud%3A%2F98fb10b6-3535-4c6a-862c-d41b539554ab%2Fd470aa0a-ffff-4397-94ec-f7aa13610003\u0026serverType\u003desiserver\u0026projectBranch\u003dVE\u0026serverName\u003dmagicdraw-prod.bmwgroup.net%3A27110\u0026projectName\u003dBoardnet+Architecture+SP2025\u0026elementName\u003dAllocation+Target+%5BFunML%5D+ACSM\u0026metaType\u003dClass\u0026elementQName\u003dLibrary%3A%3AAllocationTargets%3A%3AOnboard+ECUs%3A%3AACSM"
                 }
             },
@@ -377,6 +382,7 @@
                     "domain": "Library",
                     "responsible": "",
                     "type": "allocationtargetfunml",
+                    "componenttype":"ECU",
                     "url": "mdel://142af936-cc97-4431-9efb-8f3f4fa86f93?projectID\u003dtwcloud%3A%2F98fb10b6-3535-4c6a-862c-d41b539554ab%2Fd470aa0a-ffff-4397-94ec-f7aa13610003\u0026serverType\u003desiserver\u0026projectBranch\u003dVE\u0026serverName\u003dmagicdraw-prod.bmwgroup.net%3A27110\u0026projectName\u003dBoardnet+Architecture+SP2025\u0026elementName\u003dAllocation+Target+%5BFunML%5D+IPN_MAIN\u0026metaType\u003dClass\u0026elementQName\u003dLibrary%3A%3AAllocationTargets%3A%3AOnboard+ECUs%3A%3AIPN_MAIN"
                 }
             },
@@ -419,6 +425,7 @@
                     "domain": "Library",
                     "responsible": "",
                     "type": "allocationtargetfunml",
+                    "componenttype":"Sensor",
                     "url": "mdel://1accf23f-e303-4e11-806d-e55db33cba14?projectID\u003dtwcloud%3A%2F98fb10b6-3535-4c6a-862c-d41b539554ab%2Fd470aa0a-ffff-4397-94ec-f7aa13610003\u0026serverType\u003desiserver\u0026projectBranch\u003dVE\u0026serverName\u003dmagicdraw-prod.bmwgroup.net%3A27110\u0026projectName\u003dBoardnet+Architecture+SP2025\u0026elementName\u003dAllocation+Target+%5BFunML%5D+IPN_PERF\u0026metaType\u003dClass\u0026elementQName\u003dLibrary%3A%3AAllocationTargets%3A%3AOnboard+ECUs%3A%3AIPN_PERF"
                 }
             },
@@ -461,6 +468,7 @@
                     "domain": "Library",
                     "responsible": "",
                     "type": "allocationtargetfunml",
+                    "componenttype":"Actuator",
                     "url": "mdel://55d566c3-597f-4bcb-840b-eef3000ebca9?projectID\u003dtwcloud%3A%2F98fb10b6-3535-4c6a-862c-d41b539554ab%2Fd470aa0a-ffff-4397-94ec-f7aa13610003\u0026serverType\u003desiserver\u0026projectBranch\u003dVE\u0026serverName\u003dmagicdraw-prod.bmwgroup.net%3A27110\u0026projectName\u003dBoardnet+Architecture+SP2025\u0026elementName\u003dAllocation+Target+%5BFunML%5D+AAG\u0026metaType\u003dClass\u0026elementQName\u003dLibrary%3A%3AAllocationTargets%3A%3AOnboard+ECUs%3A%3AAAG"
                 }
             },
@@ -657,6 +665,7 @@
                     "domain": "Library",
                     "responsible": "",
                     "type": "allocationtargetfunml",
+                    "componenttype":"Zusammenbau",
                     "url": "mdel://a44f6c3b-2278-40a3-adef-e2cabdbe14cc?projectID\u003dtwcloud%3A%2F98fb10b6-3535-4c6a-862c-d41b539554ab%2Fd470aa0a-ffff-4397-94ec-f7aa13610003\u0026serverType\u003desiserver\u0026projectBranch\u003dVE\u0026serverName\u003dmagicdraw-prod.bmwgroup.net%3A27110\u0026projectName\u003dBoardnet+Architecture+SP2025\u0026elementName\u003dAllocation+Target+%5BFunML%5D+IPB_App1\u0026metaType\u003dClass\u0026elementQName\u003dLibrary%3A%3AAllocationTargets%3A%3AOnboard+ECUs%3A%3AIPB_App1"
                 }
             },
@@ -685,6 +694,7 @@
                     "domain": "Library",
                     "responsible": "",
                     "type": "allocationtargetfunml",
+                    "componenttype":"ECU",
                     "url": "mdel://176350a4-ce33-4ecf-9c48-934d2d21e7be?projectID\u003dtwcloud%3A%2F98fb10b6-3535-4c6a-862c-d41b539554ab%2Fd470aa0a-ffff-4397-94ec-f7aa13610003\u0026serverType\u003desiserver\u0026projectBranch\u003dVE\u0026serverName\u003dmagicdraw-prod.bmwgroup.net%3A27110\u0026projectName\u003dBoardnet+Architecture+SP2025\u0026elementName\u003dAllocation+Target+%5BFunML%5D+DME1\u0026metaType\u003dClass\u0026elementQName\u003dLibrary%3A%3AAllocationTargets%3A%3AOnboard+ECUs%3A%3ADME1"
                 }
             },
@@ -713,6 +723,7 @@
                     "domain": "Library",
                     "responsible": "",
                     "type": "allocationtargetfunml",
+                    "componenttype":"Sensor",
                     "url": "mdel://b1d2d2a2-3ec2-4edb-b192-47000ac2df94?projectID\u003dtwcloud%3A%2F98fb10b6-3535-4c6a-862c-d41b539554ab%2Fd470aa0a-ffff-4397-94ec-f7aa13610003\u0026serverType\u003desiserver\u0026projectBranch\u003dVE\u0026serverName\u003dmagicdraw-prod.bmwgroup.net%3A27110\u0026projectName\u003dBoardnet+Architecture+SP2025\u0026elementName\u003dAllocation+Target+%5BFunML%5D+IDCevo\u0026metaType\u003dClass\u0026elementQName\u003dLibrary%3A%3AAllocationTargets%3A%3AOnboard+ECUs%3A%3AIDCevo"
                 }
             },
@@ -727,6 +738,7 @@
                     "domain": "Library",
                     "responsible": "",
                     "type": "allocationtargetfunml",
+                    "componenttype":"Actuator",
                     "url": "mdel://7ee4f67a-b881-446e-b32b-4a3f0e6a9433?projectID\u003dtwcloud%3A%2F98fb10b6-3535-4c6a-862c-d41b539554ab%2Fd470aa0a-ffff-4397-94ec-f7aa13610003\u0026serverType\u003desiserver\u0026projectBranch\u003dVE\u0026serverName\u003dmagicdraw-prod.bmwgroup.net%3A27110\u0026projectName\u003dBoardnet+Architecture+SP2025\u0026elementName\u003dAllocation+Target+%5BFunML%5D+IPF_FAR\u0026metaType\u003dClass\u0026elementQName\u003dLibrary%3A%3AAllocationTargets%3A%3AOnboard+ECUs%3A%3AIPF_FAR"
                 }
             }
