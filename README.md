@@ -1,28 +1,33 @@
-# Cytoscape.js Vektörel Büyüteç Paneli + Zoom Slider
+# Cytoscape.js - Canlı Vektörel Büyüteç Paneli (Zoom Slider ile)
 
-## Genel Tanım
+## Amaç
 
-Bu arayüzde, Cytoscape.js tabanlı bir grafik uygulamasına, sağ üstte bir büyüteç simgesi eklenmiştir.  
-Kullanıcı bu simgeye tıkladığında, ekranın sağ alt köşesinde sabit, **150x100 px** boyutunda bir büyüteç paneli açılır.  
-Bu panelde, ana grafikte fareyle gezdiğin alanın belirlediğin büyütmede (varsayılan 2x, ayarlanabilir 1x-10x arası) **vektörel ve canlı önizlemesi** gösterilir.
+Bu sistem, Cytoscape.js ile oluşturulmuş bir grafiğe **canlı, net, vektörel bir büyüteç paneli** ekler.  
+Kullanıcı, büyüteç ikonuna tıklayarak paneli açabilir, panelde ana grafikte farenin gezdiği alanı **1x ile 10x arası ayarlanabilir yakınlaştırma** ile görebilir.  
+Büyüteç paneli, ana grafiği CANLI olarak yansıtır, daima vektörel ve pikselsiz gösterim sunar.
 
-- Büyüteç açıkken, ana Cytoscape alanında farenin şekli `+` olur.
-- Büyüteç panelinin üst kısmında, kullanıcıya büyütme oranını değiştirme imkanı sunan bir **slider** (range input) bulunur.
-- Paneldeki grafik, ana grafiğin node ve edge’leriyle birebir ve vektörel olarak güncellenir (her zaman keskin ve net).
-- Büyüteç paneli etkileşimsizdir; sadece canlı önizleme sunar.
-- Panel kapanınca büyüteç etkisi sona erer.
+## Özellikler
 
-## Teknik Detaylar
+- Sağ üstte bir büyüteç (magnifier) ikonu yer alır.
+- Büyüteç ikonuna tıklayınca sağ altta 150x100 px sabit boyutlu bir büyüteç paneli açılır.
+    - Panelin üst kısmında bir "slider" (range input) ile yakınlaştırma oranı **1x ile 10x** arası seçilebilir.
+    - Panelin altında, farenin ana grafikte gezdiği yerin **vektörel (asla bulanık olmayan)** canlı görünümü sunulur.
+- Büyüteç açıkken, farenin şekli "+" olur.
+- Panelde hiçbir etkileşim yoktur (sadece önizleme sunar).
+- Panel kapandığında büyüteç işlevi devre dışı kalır.
+- Büyüteç paneli, ana grafikteki zoom/pan ve veri değişikliklerine tam senkronize şekilde tepki verir.
 
-- Büyüteç panelinde, ikinci bir Cytoscape örneği (`magCy`) oluşturulur. Bu örnek, ana Cytoscape’in tüm elementlerini ve stilini paylaşır, ama sadece küçük panelde görünür.
-- Her mouse hareketinde, ana grafikteki mouse pozisyonu paneldeki cytoscape’in ortasına getirilir ve kullanıcı tarafından seçilen yakınlaştırma oranı uygulanır.
-- Zoom slider ile büyüteç panelinin büyütme oranı **canlı şekilde değiştirilebilir**.
-- Kodda dışa bağımlı bir ikon ya da stil yoktur, her şey lokal olarak tanımlanır.
+## Nasıl Çalışır?
 
-## Tam Çalışan Kod
+- Panelde, ana Cytoscape’den **ayrı, ikinci bir Cytoscape örneği** (`magCy`) oluşturulur.
+- Bu ikinci örnek, ana grafiğin tüm “elements” ve “style”’ını paylaşır.
+- Her mouse hareketinde:
+    - Ana grafikteki mouse noktasının graf uzayındaki koordinatı alınır.
+    - Büyüteç panelindeki Cytoscape’in ortasına bu nokta denk gelecek şekilde `pan` ve `zoom` ayarlanır.
+    - Panelin zoom oranı, slider üzerinden istediğin gibi değiştirilebilir.
+- Sonuç: Paneldeki görünüm daima net ve CANLI’dır, hiçbir zaman pixel büyütme yapılmaz.
 
-Aşağıdaki kodu tek başına çalıştırabilirsin.  
-Cytoscape’in örnek node ve edge’leri ile gelir, kendi verini kolayca ekleyebilirsin.
+## KOD (Kendi başına çalışır, başka bağımlılık gerektirmez)
 
 ```html name=index.html
 <!DOCTYPE html>
@@ -78,13 +83,16 @@ Cytoscape’in örnek node ve edge’leri ile gelir, kendi verini kolayca ekleye
   </style>
 </head>
 <body>
+  <!-- Sağ üstte büyüteç ikonu -->
   <button id="magnifier-btn" title="Büyüteç">
     <svg viewBox="0 0 40 40" width="24" height="24" fill="none" stroke="black" stroke-width="2">
       <circle cx="17" cy="17" r="10" stroke-width="2.5"/>
       <line x1="27" y1="27" x2="36" y2="36" stroke-width="3" stroke-linecap="round"/>
     </svg>
   </button>
+  <!-- Ana cytoscape grafiği -->
   <div id="cy"></div>
+  <!-- Sağ altta büyüteç paneli -->
   <div id="magnifier-panel">
     <div id="magnifier-zoom-bar">
       <span style="font-size:13px; color:#666;" title="Yakınlaştırma Oranı">🔍</span>
@@ -94,7 +102,7 @@ Cytoscape’in örnek node ve edge’leri ile gelir, kendi verini kolayca ekleye
     <div id="magnifier-cy"></div>
   </div>
   <script>
-    // --- Ana Cytoscape grafiği
+    // Ana Cytoscape grafiği örneği
     var cy = cytoscape({
       container: document.getElementById('cy'),
       elements: [
@@ -116,10 +124,10 @@ Cytoscape’in örnek node ve edge’leri ile gelir, kendi verini kolayca ekleye
       layout: { name: 'grid' }
     });
 
-    // --- Büyüteç Paneli için ikinci cytoscape
+    // Büyüteç Paneli için 2. cytoscape
     let magCy = null;
     const MAG_WIDTH = 150, MAG_HEIGHT = 100;
-    let magZoom = 2; // Varsayılan büyütme oranı
+    let magZoom = 2; // Varsayılan büyütme oranı (slider ile değişir)
     const magnifierBtn = document.getElementById('magnifier-btn');
     const magnifierPanel = document.getElementById('magnifier-panel');
     const magnifierCyDiv = document.getElementById('magnifier-cy');
@@ -128,7 +136,7 @@ Cytoscape’in örnek node ve edge’leri ile gelir, kendi verini kolayca ekleye
     let magnifierActive = false;
     const plusCursor = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><circle cx="16" cy="16" r="13" fill="white" stroke="black" stroke-width="2"/><line x1="16" y1="7" x2="16" y2="25" stroke="black" stroke-width="3"/><line x1="7" y1="16" x2="25" y2="16" stroke="black" stroke-width="3"/></svg>';
 
-    // Büyüteç paneli cytoscape'ini oluştur (ilk açılışta)
+    // Paneldeki cytoscape'i başlat (sadece 1 kez)
     function ensureMagCy() {
       if (magCy) return;
       magCy = cytoscape({
@@ -147,6 +155,7 @@ Cytoscape’in örnek node ve edge’leri ile gelir, kendi verini kolayca ekleye
       magCy.on('tap', e => false);
     }
 
+    // Panel cytoscape'inin element ve stilini ana grafikle eşitle
     function syncMagCyElementsAndStyle() {
       if (!magCy) return;
       magCy.json({ elements: cy.json().elements });
@@ -154,7 +163,7 @@ Cytoscape’in örnek node ve edge’leri ile gelir, kendi verini kolayca ekleye
       magCy.resize();
     }
 
-    // Paneldeki büyütme ve pan'ı ayarla
+    // Paneldeki zoom ve pan'ı güncelle: farenin olduğu yer panelin ortasına gelsin
     function updateMagnifierView(mouseX, mouseY) {
       if (!magnifierActive) return;
       ensureMagCy();
@@ -163,10 +172,10 @@ Cytoscape’in örnek node ve edge’leri ile gelir, kendi verini kolayca ekleye
       const localX = mouseX - cyRect.left;
       const localY = mouseY - cyRect.top;
 
-      // Ana cytoscape içindeki mouse pozisyonunu graf koordinatına çevir
+      // Ana grafikte mouse pozisyonunu graf koordinatına çevir
       const cyGraphPosition = cy.renderer().projectIntoViewport(localX, localY);
 
-      // Panel cytoscape'in zoom'unu ayarla
+      // Paneldeki cytoscape zoom'unu ayarla
       magCy.zoom(cy.zoom() * magZoom);
       magCy.resize();
 
@@ -179,7 +188,7 @@ Cytoscape’in örnek node ve edge’leri ile gelir, kendi verini kolayca ekleye
       magCy.resize();
     }
 
-    // Ana cytoscape değişirse minik cytoscape de güncellensin
+    // Ana grafikte node/değişiklik olursa paneli de güncelle
     cy.on('add remove data style', () => {
       if (magnifierActive) {
         ensureMagCy();
@@ -200,13 +209,14 @@ Cytoscape’in örnek node ve edge’leri ile gelir, kendi verini kolayca ekleye
       }
     });
 
-    // Mouse ile paneli güncelle
+    // Mouse hareketinde paneli güncelle
     cy.container().addEventListener('mousemove', e => {
       if (!magnifierActive) return;
       updateMagnifierView(e.clientX, e.clientY);
     });
     cy.container().addEventListener('mouseleave', () => {});
 
+    // Ana grafikte zoom/pan olursa paneli senkronize et
     cy.on('zoom pan render', () => {
       if (magnifierActive && window.lastMouse) updateMagnifierView(window.lastMouse.x, window.lastMouse.y);
     });
@@ -214,7 +224,7 @@ Cytoscape’in örnek node ve edge’leri ile gelir, kendi verini kolayca ekleye
       window.lastMouse = {x: e.clientX, y: e.clientY};
     });
 
-    // Slider ile büyütme oranı değişimi
+    // Slider ile büyüteç zoom oranını değiştir
     function setMagnifierZoom(val) {
       magZoom = parseFloat(val);
       magnifierZoomValue.textContent = magZoom.toFixed(1) + 'x';
@@ -228,3 +238,11 @@ Cytoscape’in örnek node ve edge’leri ile gelir, kendi verini kolayca ekleye
 </body>
 </html>
 ```
+
+## Kullanım Kısa Özeti
+
+- Sayfayı aç, büyüteç ikonuna tıkla.
+- Ana grafikte mouse'u gezdir: Sağ alttaki panelde daima vektörel ve canlı büyütme oluşur.
+- Paneldeki slider ile büyütme oranını istediğin gibi değiştir (1x-10x arası).
+- Panelde hiçbir zaman bulanıklık olmaz, her şey ana grafikten CANLI alınır.
+- Kendi Cytoscape verini ekleyerek istediğin gibi kullanabilirsin.
