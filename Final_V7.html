@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Baran Layout</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.21.1/cytoscape.min.js"></script>
+  <script src="https://unpkg.com/cytoscape-cose-bilkent@4.0.0/cytoscape-cose-bilkent.js"></script>
+
+  
+  <style>
+
+
+
+    /* ... still your styles ... */
+    /* (Style kısmını kısalttım, istersen eskiyle değiştir) */
+    #cy {
+      width: 100%;
+      height: 600px;
+      border: 1px solid black;
+    }
+    #node-data {
+      border: 1px solid black;
+      padding: 10px;
+      margin-top: 10px;
+      display: none;
+      background: #fafafa;
+      max-width: 600px;
+      font-family: monospace;
+    }
+    #exportBtn, #customLayoutBtn {
+      position: absolute;
+      top: 18px;
+      z-index: 10;
+      padding: 8px 16px;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    #exportBtn {
+      right: 18px;
+      background: #43a047;
+    }
+    #exportBtn:hover {
+      background: #388e3c;
+    }
+    #customLayoutBtn {
+      right: 140px;
+      background: #1976d2;
+    }
+    #customLayoutBtn:hover {
+      background: #115293;
+    }
+    body {
+      position: relative;
+    }
+    .highlight-l0 {
+      background-color: #f52d05 !important;
+      color: #000 !important;
+    }
+    .highlight-l1 {
+      background-color: #f57105 !important;
+      color: #000 !important;
+    }
+    .highlight-l2 {
+      background-color: #f5c105 !important;
+      color: #000 !important;
+    }
+    #context-menu {
+      position: absolute;
+      display: none;
+      background: #fff;
+      border: 1px solid #999;
+      border-radius: 5px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+      z-index: 100;
+      min-width: 120px;
+      font-family: sans-serif;
+    }
+    #context-menu ul {
+      list-style: none;
+      margin: 0;
+      padding: 7px 0 7px 0;
+    }
+    #context-menu ul li {
+      padding: 7px 20px;
+      cursor: pointer;
+      transition: background 0.2s;
+      font-size: 16px;
+    }
+    #context-menu ul li:hover {
+      background: #f1f1f1;
+    }
+    #fullscreen-panel {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(255,255,255,0.97);
+      z-index: 200;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.18);
+      animation: fadein 0.2s;
+    }
+    @keyframes fadein {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+    #fullscreen-content {
+      position: absolute;
+      top: 40px;
+      left: 40px;
+      right: 40px;
+      bottom: 40px;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 3px 30px rgba(0,0,0,0.15);
+      padding: 40px 40px 40px 40px;
+      overflow: auto;
+      font-size: 22px;
+      font-family: 'Segoe UI', Arial, sans-serif;
+    }
+    #fullscreen-close {
+      position: absolute;
+      top: 16px;
+      right: 32px;
+      background: #f44336;
+      border: none;
+      color: #fff;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      font-size: 22px;
+      font-weight: bold;
+      cursor: pointer;
+      z-index: 210;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    #fullscreen-close:hover {
+      background: #c62828;
+    }
+  </style>
+</head>
+<body>
+  <h2>The Baran Layout</h2>
+  <button id="customLayoutBtn">Özel Konumlandır</button>
+  <button id="exportBtn">Export JSON</button>
+  <input type="file" id="jsonFileInput" accept=".json" style="margin-bottom:10px;">
+  <div id="cy"></div>
+  <div id="node-data"></div>
+  <div id="context-menu">
+    <ul>
+      <li id="context-more">Mehr</li>
+    </ul>
+  </div>
+  <div id="fullscreen-panel">
+    <button id="fullscreen-close">&times;</button>
+    <div id="fullscreen-content">
+    </div>
+  </div>
+  <script>
+    let cyInstance = null;
+    let lastElements = null;
+    let contextNode = null;
+
+    // ... enrichNodesWithParentData, getNodeSize, parseDriveAssistData, hasAnyNodeWithPosition ... (aynen bırak)
+
+    function enrichNodesWithParentData(elements) {
+      const nodeMap = {};
+      elements.forEach(el => {
+        if (!el.data || !el.data.id) return;
+        nodeMap[el.data.id] = el.data;
+      });
+      elements.forEach(el => {
+        if (!el.data || !el.data.parent) return;
+        const parentId = el.data.parent;
+        const parent = nodeMap[parentId];
+        if (parent) {
+          const parentInfo = {
+            id: parent.id,
+            label: parent.label,
+            type: parent.type || parent.originalType,
+            originalType: parent.originalType,
+            x: (parent.position && typeof parent.position.x === "number") ? parent.position.x : undefined,
+            y: (parent.position && typeof parent.position.y === "number") ? parent.position.y : undefined,
+            layout_x: parent.layout_x,
+            layout_y: parent.layout_y,
+            layout_width: parent.layout_width,
+            layout_height: parent.layout_height
+          };
+          if (typeof parent.componenttype !== "undefined") {
+            parentInfo.componenttype = parent.componenttype;
+          }
+          el.data.parentInfo = parentInfo;
+        }
+      });
+    }
+
+    function getNodeSize(node) {
+      let w = 300, h = 250;
+      if (node.data('originalType') === "allocationtargetfunml" || node.data('type') === "Bus") {
+        w = 300;
+        h = 250;
+      } else if (node.data('originalType') === "logicalclusterfunml" || node.data('type') === "Cluster") {
+        w = 150; h = 150;
+      } else if (node.data('originalType') === "logicalsubcontextfunml" || node.data('type') === "Subcontext") {
+        w = 150; h = 150;
+      }
+      if (typeof node.data('width') === 'number') w = node.data('width');
+      if (typeof node.data('height') === 'number') h = node.data('height');
+      return { width: w, height: h };
+    }
+
+    function parseDriveAssistData(json) {
+      const elements = [];
+      if (json.elements && Array.isArray(json.elements.nodes)) {
+        for (const n of json.elements.nodes) {
+          let mappedType = n.data.type;
+          if (mappedType === 'allocationtargetfunml') mappedType = 'Bus';
+          else if (mappedType === 'logicalclusterfunml') mappedType = 'Cluster';
+          else if (mappedType === 'logicalsubcontextfunml') mappedType = 'Subcontext';
+
+          let position = undefined;
+          if (typeof n.data.position === "object" && n.data.position !== null && typeof n.data.position.x === "number" && typeof n.data.position.y === "number") {
+            position = { x: n.data.position.x, y: n.data.position.y };
+          } else if (typeof n.data.x === "number" && typeof n.data.y === "number") {
+            position = { x: n.data.x, y: n.data.y };
+          }
+          const nodeObj = {
+            data: {
+              ...n.data,
+              type: mappedType,
+              originalType: n.data.type
+            }
+          };
+          if (position) nodeObj.position = position;
+          elements.push(nodeObj);
+        }
+      }
+      if (json.elements && Array.isArray(json.elements.edges)) {
+        for (const e of json.elements.edges) {
+          elements.push({
+            data: {
+              id: e.data.id || (e.data.source + ':' + e.data.target),
+              source: e.data.source,
+              target: e.data.target,
+              label: e.data.label || '',
+              ...e.data
+            },
+            group: 'edges'
+          });
+        }
+      }
+      return elements;
+    }
+
+    function hasAnyNodeWithPosition(elements) {
+      return elements.some(el => el.position && typeof el.position.x === "number" && typeof el.position.y === "number");
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Label'a göre node genişliği ölçüm fonksiyonu
+function computeNodeWidthByLabel(label, font = "18px Arial", minWidth = 100, padding = 40) {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  ctx.font = font;
+  const textWidth = ctx.measureText(label).width;
+  return Math.max(minWidth, textWidth + padding);
+}
+
+
+
+
+
+
+// ---- YENİ CUSTOM LAYOUT ALGORITHM (çakışmasız ve ortalanmış) ----
+function applyCustomLayoutForAllocationTargets(cy) {
+  // CHILD_PADDING ve VERTICAL_CHILD_PADDING iki katına çıkarıldı!
+  const CHILD_PADDING = 350; // Child node'lar arası boşluk (2 kat)
+  const CHILD_SIDE_PADDING = 50; // Parent-child kenar boşlukları (child'lar arası dikeyde de kullanılacak)
+  const VERTICAL_CHILD_PADDING = 200; // Sensor/Actuator child'ları arası dikey boşluk (2 kat)
+  const CHILD_SIDE_PADDING_SENSOR = 200;
+  const CHILD_SIDE_PADDING_ACTUATOR = 200;
+
+  function getNodeSize(n) {
+    const label = n.data('label') || '';
+    const font = "18px Arial";
+    const width = computeNodeWidthByLabel(label, font, 100, 40);
+    const height = 60; // Sabit yükseklik (gerekirse dinamik ayarlayabilirsiniz)
+    return { width, height };
+  }
+
+  function calcTotalSize(nodes, axis) {
+    if (nodes.length === 0) return 0;
+    let total = 0;
+    nodes.forEach(n => {
+      const size = getNodeSize(n);
+      total += axis === "x" ? size.width : size.height;
+    });
+    total += (nodes.length - 1) * (axis === "x" ? CHILD_PADDING : VERTICAL_CHILD_PADDING);
+    return total;
+  }
+
+  const parentNodes = cy.nodes().filter(n =>
+    n.data('originalType') === "allocationtargetfunml" &&
+    typeof n.data('componenttype') !== "undefined"
+  );
+
+  function getChildNodesOfParent(parentId) {
+    return cy.nodes().filter(n =>
+      n.data('parent') === parentId
+    );
+  }
+
+  // --- Parentleri yana yana hizala (Zusammenbau/ECU) ---
+  const targetParents = parentNodes.filter(parent => {
+    const type = parent.data('componenttype');
+    return type === "ECU" || type === "Zusammenbau";
+  });
+
+  if (targetParents.length > 0) {
+    function getParentTotalWidth(parent) {
+      const childNodes = getChildNodesOfParent(parent.id());
+      if (childNodes.length === 0) {
+        // Sadece parent'ın kendi label genişliği
+        const size = getNodeSize(parent);
+        return size.width;
+      }
+
+      // Child'ların toplam genişliği + kenarlardan padding
+      let childWidth = childNodes.reduce((sum, n, i) => {
+        const size = getNodeSize(n);
+        return sum + size.width + (i > 0 ? CHILD_PADDING : 0);
+      }, 0);
+      childWidth += 2 * CHILD_SIDE_PADDING; // Sağ ve sol kenar padding
+
+      // Parent'ın kendi label'ı child'ların toplamından genişse, onu al
+      const parentLabelWidth = getNodeSize(parent).width;
+      return Math.max(childWidth, parentLabelWidth);
+    }
+
+    // Parent'ların merkezini belirle
+    const avgY =
+      targetParents.map(p => p.position('y')).reduce((sum, y) => sum + y, 0) / targetParents.length;
+    const avgX =
+      targetParents.map(p => p.position('x')).reduce((sum, x) => sum + x, 0) / targetParents.length;
+
+    // Parent'ların toplam genişliği ve aradaki dinamik boşlukları hesapla
+    let totalWidth = 0;
+    const parentWidths = [];
+    for (let i = 0; i < targetParents.length; i++) {
+      const width = getParentTotalWidth(targetParents[i]);
+      parentWidths.push(width);
+      totalWidth += width;
+      if (i > 0) totalWidth += CHILD_PADDING; // Parent'lar arası boşluk
+    }
+
+    // Ortala: tam olarak avgX merkezi etrafında, toplam genişlik kadar sağa ve sola eşit olacak şekilde konumlandır!
+    let startX = avgX - totalWidth / 2;
+
+    // Parent'ların pozisyonunu güncelle
+    targetParents.forEach((parent, i) => {
+      const width = parentWidths[i];
+      parent.position({
+        x: startX + width / 2,
+        y: avgY
+      });
+      startX += width + CHILD_PADDING;
+    });
+  }
+
+  // --- SENSOR PARENTLERİ VE CHILD'LARI DİNAMİK DİKEY SIRALA ---
+  const sensorParents = parentNodes.filter(parent => parent.data('componenttype') === "Sensor");
+  if (sensorParents.length > 0) {
+    // Ortalamak için merkez koordinatını seç (x)
+    const avgSensorX =
+      sensorParents.map(p => p.position('x')).reduce((sum, x) => sum + x, 0) / sensorParents.length;
+    // Y pozisyonu için ortalama, ama dinamik olarak aşağıda güncellenecek
+    const avgSensorY =
+      sensorParents.map(p => p.position('y')).reduce((sum, y) => sum + y, 0) / sensorParents.length;
+
+    // Her bir sensor parent için, kendi child'ları + parent yüksekliği + padding ile block yüksekliği hesapla
+    const sensorBlocks = sensorParents.map(parent => {
+      const parentSize = getNodeSize(parent);
+      const childNodes = getChildNodesOfParent(parent.id());
+      let blockHeight = 0;
+      let firstChild = true;
+      if (childNodes.length > 0) {
+        blockHeight += CHILD_SIDE_PADDING_SENSOR; // Parent ile ilk child arası boşluk
+        childNodes.forEach(n => {
+          const size = getNodeSize(n);
+          if (!firstChild) blockHeight += VERTICAL_CHILD_PADDING;
+          blockHeight += size.height;
+          blockHeight += CHILD_SIDE_PADDING_SENSOR; // Her child'ın üstüne padding
+          firstChild = false;
+        });
+        blockHeight += parentSize.height; // Parent'ın kendi yüksekliği
+      } else {
+        blockHeight += parentSize.height + 2 * CHILD_SIDE_PADDING_SENSOR;
+      }
+      return { parent, blockHeight, parentSize, childNodes };
+    });
+
+    // Toplam blok yüksekliğini bul, ortalamak için kullan
+    const totalSensorHeight =
+      sensorBlocks.reduce((sum, b) => sum + b.blockHeight, 0);
+
+    let startY = avgSensorY - totalSensorHeight / 2;
+
+    sensorBlocks.forEach(({ parent, blockHeight, parentSize, childNodes }) => {
+      // Parent'ı blok başına hizala (üstte, child bloğunun üstünde)
+      const parentY = startY + parentSize.height / 2;
+      parent.position({
+        x: avgSensorX,
+        y: parentY
+      });
+
+      // Child'ları parent'ın soluna, alt alta ve aralarında CHILD_SIDE_PADDING_SENSOR olacak şekilde hizala
+      if (childNodes.length > 0) {
+        let currY = parentY + parentSize.height / 2 + CHILD_SIDE_PADDING_SENSOR;
+        let childX = avgSensorX - 500; // Parent’in hemen solu
+        childNodes.forEach((n, i) => {
+          const size = getNodeSize(n);
+          if (i > 0) currY += VERTICAL_CHILD_PADDING;
+          n.position({ x: childX - size.width / 2, y: currY + size.height / 2 + 100 }); // yukari kayma sorununu burda 100 ekleyerek cöztdük
+          currY += size.height + CHILD_SIDE_PADDING_SENSOR;
+        });
+      }
+      // Bir sonraki parent için Y'yi güncelle
+      startY += blockHeight;
+    });
+  }
+
+  // --- ACTUATOR PARENTLERİ VE CHILD'LARI DİNAMİK DİKEY SIRALA (Sensor ile aynı mantık) ---
+  const actuatorParents = parentNodes.filter(parent => parent.data('componenttype') === "Actuator");
+  if (actuatorParents.length > 0) {
+    // Ortalamak için merkez koordinatını seç (x)
+    const avgActuatorX =
+      actuatorParents.map(p => p.position('x')).reduce((sum, x) => sum + x, 0) / actuatorParents.length;
+    const avgActuatorY =
+      actuatorParents.map(p => p.position('y')).reduce((sum, y) => sum + y, 0) / actuatorParents.length;
+
+    // Her bir actuator parent için, kendi child'ları + parent yüksekliği + padding ile block yüksekliği hesapla
+    const actuatorBlocks = actuatorParents.map(parent => {
+      const parentSize = getNodeSize(parent);
+      const childNodes = getChildNodesOfParent(parent.id());
+      let blockHeight = 0;
+      let firstChild = true;
+      if (childNodes.length > 0) {
+        blockHeight += CHILD_SIDE_PADDING_ACTUATOR; // Parent ile ilk child arası boşluk
+        childNodes.forEach(n => {
+          const size = getNodeSize(n);
+          if (!firstChild) blockHeight += VERTICAL_CHILD_PADDING;
+          blockHeight += size.height;
+          blockHeight += CHILD_SIDE_PADDING_ACTUATOR; // Her child'ın üstüne padding
+          firstChild = false;
+        });
+        blockHeight += parentSize.height; // Parent'ın kendi yüksekliği
+      } else {
+        blockHeight += parentSize.height + 2 * CHILD_SIDE_PADDING_ACTUATOR;
+      }
+      return { parent, blockHeight, parentSize, childNodes };
+    });
+
+    // Toplam blok yüksekliğini bul, ortalamak için kullan
+    const totalActuatorHeight =
+      actuatorBlocks.reduce((sum, b) => sum + b.blockHeight, 0);
+
+    let startY = avgActuatorY - totalActuatorHeight / 2;
+
+    actuatorBlocks.forEach(({ parent, blockHeight, parentSize, childNodes }) => {
+      // Parent'ı blok başına hizala (üstte, child bloğunun üstünde)
+      const parentY = startY + parentSize.height / 2;
+      parent.position({
+        x: avgActuatorX,
+        y: parentY
+      });
+
+      // Child'ları parent'ın SAĞINA, alt alta ve aralarında CHILD_SIDE_PADDING_ACTUATOR olacak şekilde hizala
+      if (childNodes.length > 0) {
+        let currY = parentY + parentSize.height / 2 + CHILD_SIDE_PADDING_ACTUATOR;
+        let childX = avgActuatorX + 500; // Parent’in hemen sağı
+        childNodes.forEach((n, i) => {
+          const size = getNodeSize(n);
+          if (i > 0) currY += VERTICAL_CHILD_PADDING;
+          n.position({ x: childX + size.width / 2, y: currY + size.height / 2 - 175 });
+          currY += size.height + CHILD_SIDE_PADDING_ACTUATOR;
+        });
+      }
+      // Bir sonraki parent için Y'yi güncelle
+      startY += blockHeight;
+    });
+  }
+  
+  // --- Diğer parent'lar için child node'ları hizala ---
+  parentNodes.forEach(parent => {
+    const type = parent.data('componenttype');
+    if (type === "Sensor" || type === "Actuator") {
+      // Sensor ve Actuator tipi yukarıda özel sırada işlendi!
+      return;
+    }
+    const childNodes = getChildNodesOfParent(parent.id());
+    if (childNodes.length === 0) return;
+
+    // Parent'in EN GÜNCEL pozisyonunu al!
+    const px = parent.position('x');
+    const py = parent.position('y');
+
+    if (type === "ECU" || type === "Zusammenbau") {
+      // YATAY hizalama: Parent’in altına, ortalı şekilde child’ları CHILD_PADDING ile sırala
+      const totalWidth = childNodes.reduce((sum, n, i) => {
+        const size = getNodeSize(n);
+        return sum + size.width + (i > 0 ? CHILD_PADDING : 0);
+      }, 0);
+
+      let startX = px - totalWidth / 2;
+      let y = py - 300; // Parent'in hemen altı
+
+      childNodes.forEach((n, i) => {
+        const size = getNodeSize(n);
+        n.position({ x: startX + size.width / 2 + 200, y: y + size.height / 2 });
+        startX += size.width + CHILD_PADDING;
+      });
+
+    }
+  });
+}
+
+
+
+
+
+
+
+// --- Parent bilgisini her zaman güncel tutmak için: node data'larını tekrar güncelle
+function updateNodesWithParentDataLive(cyInstance) {
+  if (!cyInstance) return;
+  const nodeMap = {};
+  cyInstance.nodes().forEach(n => nodeMap[n.id()] = n.data());
+  cyInstance.nodes().forEach(n => {
+    if (n.data('parent')) {
+      const parent = nodeMap[n.data('parent')];
+      if (parent) {
+        const parentInfo = {
+          id: parent.id,
+          label: parent.label,
+          type: parent.type || parent.originalType,
+          originalType: parent.originalType,
+          x: (parent.position && typeof parent.position.x === "number") ? parent.position.x : undefined,
+          y: (parent.position && typeof parent.position.y === "number") ? parent.position.y : undefined,
+          layout_x: parent.layout_x,
+          layout_y: parent.layout_y,
+          layout_width: parent.layout_width,
+          layout_height: parent.layout_height
+        };
+        if (typeof parent.componenttype !== "undefined") {
+          parentInfo.componenttype = parent.componenttype;
+        }
+        n.data('parentInfo', parentInfo);
+      }
+    }
+  });
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+    function renderDriveAssistGraph(elements) {
+      lastElements = elements;
+      enrichNodesWithParentData(elements);
+      const parentNodeIds = new Set();
+      elements.forEach(el => {
+        if (el.data && el.data.source && el.data.target) {
+          parentNodeIds.add(el.data.source);
+        }
+      });
+
+      let layoutType = hasAnyNodeWithPosition(elements) ? 'preset' : 'cose-bilkent';
+
+      var cy = cytoscape({
+        container: document.getElementById('cy'),
+        elements: elements,
+        style: [
+          /* ... burada style kısmını aynen bırak ... */
+          {
+            selector: 'node',
+            style: {
+              'background-height': '30px',
+              'background-position-x': '100%',
+              'background-position-y': '0%',
+              'background-width': '30px',
+              'height': '120%',
+              'label': 'data(label)',
+              'offset-x': '12px',
+              'offset-y': '-12px',
+              'padding': '30px',
+              'shape': 'round-rectangle',
+              'text-valign': 'top',
+              'text-halign': 'center',
+              'text-min-width': '150px',
+              'text-wrap': 'wrap',
+              'width': '300%',
+              'color': '#000',
+              'font-weight': 'bold',
+              'font-size': '18px'
+            }
+          },
+          {
+            selector: 'node.has-children',
+            style: {
+              'font-size': '60px'
+            }
+          },
+          {
+            selector: 'node[originalType = "allocationtargetfunml"],node[type = "Bus"]',
+            style: {
+                'border-width': 12,
+                'background-height': '30px',
+                'background-position-x': '100%',
+                'background-position-y': '0%',
+                'background-width': '30px',
+                'height': '250px',
+                'label': 'data(label)',
+                'text-margin-y': 70,
+                'padding': '100px',
+                'shape': 'round-rectangle',
+                'text-valign': 'top',
+                'text-halign': 'center',
+                'text-min-width': '150px',
+                'text-wrap': 'wrap',
+                'width': '300px',
+                'color': '#000',
+                'font-weight': 'bold',
+                'font-size': '60px'
+            }
+          },
+          {
+            selector: 'node[originalType = "logicalclusterfunml"],node[type = "Cluster"]',
+            style: {
+                'background-color': 'rgb(177, 195, 177)',
+                'border-width': 6,
+                'border-color': 'rgb(153, 141, 92)',
+                'text-valign': 'center',
+                'text-halign': 'center',
+                'font-size': '26px',
+                'width': 'label',
+                'height': '150px',
+                'padding-left': '30px',
+                'padding-right': '30px',
+                'padding-top': '20px',
+                'padding-bottom': '20px',
+                'min-width': '100px',
+                'min-height': '50px',
+                'shape': 'round-rectangle'
+            }
+          },
+          {
+            selector: 'node[originalType = "logicalsubcontextfunml"],node[type = "Subcontext"]',
+            style: {
+                'background-color': 'rgb(255, 204, 153)',
+                'border-color': 'rgb(153, 121, 92)',
+                'border-width': 6,
+                'text-valign': 'center',
+                'text-halign': 'center',
+                'font-size': '26px',
+                'width': 'label',
+                'height': '150px',
+                'padding-left': '30px',
+                'padding-right': '30px',
+                'padding-top': '20px',
+                'padding-bottom': '20px',
+                'min-width': '100px',
+                'min-height': '50px',
+                'shape': 'round-rectangle'
+            }
+          },
+          {
+            selector: 'edge',
+            style: {
+              'width': 10,
+              'line-color': '#888',
+              'line-style': 'dashed',
+              'target-arrow-shape': 'chevron',
+              'target-arrow-color': '#888',
+              'arrow-fill': 'hollow',
+              'line-scale': 0.5
+            }
+          },
+          {
+            selector: 'edge.highlighted',
+            style: {
+              'line-color': '#ff0000',
+              'target-arrow-color': '#ff0000'
+            }
+          },
+          {
+            selector: 'node.highlight-l0',
+            style: {
+              'background-color': '#f52d05',
+              'color': '#000',
+              'label': 'data(label)'
+            }
+          },
+          {
+            selector: 'node.highlight-l1',
+            style: {
+              'background-color': '#f57105',
+              'color': '#000',
+              'label': 'data(label)'
+            }
+          },
+          {
+            selector: 'node.highlight-l2',
+            style: {
+              'background-color': '#f5c105',
+              'color': '#000',
+              'label': 'data(label)'
+            }
+          }
+        ],
+        layout: layoutType === 'preset' ? {
+          name: 'preset',
+          fit: true,
+          padding: 50,
+        } : {
+          name: 'cose-bilkent',
+          avoidOverlap: true,
+          nodeDimensionsIncludeLabels: true,
+          padding: 50,
+          nodeRepulsion: 8000,
+          idealEdgeLength: 120,
+          edgeElasticity: 0.1,
+          animate: true,
+          fit: true,
+          padding: 50,
+          randomize: false,
+          nodeRepulsion: 4500,
+          idealEdgeLength: 100,
+          edgeElasticity: 0.45,
+          nestingFactor: 0.1,
+          gravity: 0.25,
+          numIter: 2500,
+          tile: true
+        }
+      });
+
+      parentNodeIds.forEach(function(parentId) {
+        var node = cy.getElementById(parentId);
+        if (node) node.addClass('has-children');
+      });
+
+      cy.ready(function () {
+        cy.nodes().forEach(function (node) {
+          if (node.data('originalType') === "allocationtargetfunml") {
+            const size = getNodeSize(node);
+            node.data('layout_x', node.position('x'));
+            node.data('layout_y', node.position('y'));
+            node.data('layout_width', size.width);
+            node.data('layout_height', size.height);
+          }
+        });
+        updateNodesWithParentDataLive();
+      });
+
+      cy.on('click', 'node', function (event) {
+        var node = event.target;
+        var nodeData = node.data();
+        var nodeDataDiv = document.getElementById('node-data');
+        nodeDataDiv.style.display = 'block';
+        let parentInfoHtml = '';
+        if (nodeData.parentInfo) {
+          parentInfoHtml = `<hr><b>Parent Bilgisi:</b><br>` +
+            Object.keys(nodeData.parentInfo)
+              .map(k => `<b>${k}:</b> ${JSON.stringify(nodeData.parentInfo[k])}`)
+              .join('<br>');
+        }
+        nodeDataDiv.innerHTML = `<strong>Node Data:</strong><br>` +
+          Object.keys(nodeData).filter(k => k !== 'parentInfo').map(k => `<b>${k}:</b> ${JSON.stringify(nodeData[k])}`).join('<br>') +
+          parentInfoHtml;
+
+        cy.nodes().removeClass('highlight-l0 highlight-l1 highlight-l2');
+        node.addClass('highlight-l0');
+        var firstDegree = node.connectedEdges().connectedNodes().filter(n => n.id() !== node.id());
+        firstDegree.addClass('highlight-l1');
+        var secondDegree = cy.collection();
+        firstDegree.forEach(function(n1) {
+          n1.connectedEdges().connectedNodes().forEach(function(n2) {
+            if (n2.id() !== node.id() && !firstDegree.contains(n2) && !n2.hasClass('highlight-l0')) {
+              secondDegree = secondDegree.add(n2);
+            }
+          });
+        });
+        secondDegree.addClass('highlight-l2');
+      });
+
+      cy.on('click', function (event) {
+        if (event.target === cy) {
+          cy.nodes().removeClass('highlight-l0 highlight-l1 highlight-l2');
+          document.getElementById('node-data').style.display = 'none';
+        }
+      });
+
+      cy.on('cxttap', 'node', function (event) {
+        event.originalEvent.preventDefault();
+        contextNode = event.target;
+        showContextMenu(event.originalEvent.clientX, event.originalEvent.clientY);
+      });
+
+      cy.on('tap', function (event) {
+        if (event.target === cy) {
+          hideContextMenu();
+        }
+      });
+      document.addEventListener('click', function(e) {
+        if (!e.target.closest('#context-menu')) {
+          hideContextMenu();
+        }
+      });
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+          hideContextMenu();
+          hideFullscreenPanel();
+        }
+      });
+
+      if (layoutType === 'preset') {
+        let nodesWithoutPos = cy.nodes().filter(n => typeof n.position('x') !== "number" || typeof n.position('y') !== "number" || isNaN(n.position('x')) || isNaN(n.position('y')));
+        if (nodesWithoutPos.length > 0) {
+          nodesWithoutPos.layout({
+            name: 'cose-bilkent',
+            avoidOverlap: true,
+            nodeDimensionsIncludeLabels: true,
+            padding: 50,
+            nodeRepulsion: 8000,
+            idealEdgeLength: 120,
+            edgeElasticity: 0.1,
+            animate: true,
+            fit: false,
+            randomize: false,
+            nodeRepulsion: 4500,
+            idealEdgeLength: 100,
+            edgeElasticity: 0.45,
+            nestingFactor: 0.1,
+            gravity: 0.25,
+            numIter: 2500,
+            tile: true
+          }).run();
+        }
+      }
+      cyInstance = cy;
+    }
+
+    function showContextMenu(x, y) {
+      const menu = document.getElementById('context-menu');
+      menu.style.display = 'block';
+      const maxX = window.innerWidth - menu.offsetWidth - 8;
+      const maxY = window.innerHeight - menu.offsetHeight - 8;
+      menu.style.left = Math.min(x, maxX) + 'px';
+      menu.style.top = Math.min(y, maxY) + 'px';
+    }
+    function hideContextMenu() {
+      document.getElementById('context-menu').style.display = 'none';
+    }
+
+    function showFullscreenPanel(contentHtml) {
+      document.getElementById('fullscreen-content').innerHTML = contentHtml;
+      document.getElementById('fullscreen-panel').style.display = 'block';
+    }
+    function hideFullscreenPanel() {
+      document.getElementById('fullscreen-panel').style.display = 'none';
+    }
+    document.getElementById('fullscreen-close').addEventListener('click', hideFullscreenPanel);
+
+    document.getElementById('context-more').addEventListener('click', function() {
+      hideContextMenu();
+      if (contextNode) {
+        const node = contextNode;
+        const cy = cyInstance;
+        const firstDegree = node.connectedEdges().connectedNodes().filter(n => n.id() !== node.id());
+        let secondDegree = cy.collection();
+        firstDegree.forEach(function(n1) {
+          n1.connectedEdges().connectedNodes().forEach(function(n2) {
+            if (n2.id() !== node.id() && !firstDegree.contains(n2) && !n2.hasClass('highlight-l0')) {
+              secondDegree = secondDegree.add(n2);
+            }
+          });
+        });
+        const showNodes = cy.collection([node]).union(firstDegree).union(secondDegree);
+        const showNodeIds = showNodes.map(n => n.id());
+        const showEdges = cy.edges().filter(edge =>
+          showNodeIds.includes(edge.source().id()) && showNodeIds.includes(edge.target().id())
+        );
+        function serializeNode(n) {
+          const data = JSON.parse(JSON.stringify(n.data()));
+          const pos = n.position();
+          return { data, position: { x: pos.x, y: pos.y } };
+        }
+        function serializeEdge(e) {
+          return { data: JSON.parse(JSON.stringify(e.data())) };
+        }
+        const miniElements = [
+          ...showNodes.map(serializeNode),
+          ...showEdges.map(serializeEdge)
+        ];
+        let html = `<h2>Ausgewählte Nodes</h2>
+          <div id="mini-cy" style="width:180%; max-width:1600px; height:600px; border:1px solid #aaa; margin:auto;"></div>`;
+        showFullscreenPanel(html);
+        setTimeout(() => {
+          let miniCy = cytoscape({
+            container: document.getElementById('mini-cy'),
+            elements: miniElements,
+            style: cyInstance.style().json(),
+            layout: {
+              name: 'preset',
+              fit: true,
+              padding: 30
+            }
+          });
+        }, 10);
+      }
+    });
+
+    document.getElementById('jsonFileInput').addEventListener('change', function(evt) {
+      const file = evt.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const json = JSON.parse(e.target.result);
+          const elements = parseDriveAssistData(json);
+          renderDriveAssistGraph(elements);
+        } catch (err) {
+          alert('Invalid JSON: ' + err.message);
+        }
+      };
+      reader.readAsText(file);
+    });
+
+    document.getElementById('exportBtn').addEventListener('click', function() {
+      if (!cyInstance) {
+        alert('Öfnnen Sie bitte eine JSON-Datei.');
+        return;
+      }
+      updateNodesWithParentDataLive();
+      const nodes = cyInstance.nodes().map(node => {
+        const data = {...node.data()};
+        data.position = node.position();
+        if (node.data('originalType') === "allocationtargetfunml") {
+          const size = getNodeSize(node);
+          data.layout_x = node.data('layout_x');
+          data.layout_y = node.data('layout_y');
+          data.layout_width = node.data('layout_width');
+          data.layout_height = node.data('layout_height');
+        }
+        if (node.data('parentInfo')) {
+          const parentInfo = {...node.data('parentInfo')};
+          if (typeof parentInfo.componenttype === "undefined") {
+            delete parentInfo.componenttype;
+          }
+          data.parentInfo = parentInfo;
+        }
+        return { data };
+      });
+      const edges = cyInstance.edges().map(edge => ({
+        data: {...edge.data()}
+      }));
+      const exportObj = {
+        elements: {
+          nodes: nodes,
+          edges: edges
+        }
+      };
+      const exportData = JSON.stringify(exportObj, null, 2);
+      const blob = new Blob([exportData], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'driveassist-export.json';
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }, 100);
+    });
+
+    document.getElementById('customLayoutBtn').onclick = function() {
+      if (!cyInstance) {
+        alert('Lütfen önce bir JSON dosyası yükleyin.');
+        return;
+      }
+      applyCustomLayoutForAllocationTargets(cyInstance);
+      cyInstance.nodes().forEach(function (node) {
+        if (node.data('originalType') === "allocationtargetfunml") {
+          const size = getNodeSize(node);
+          node.data('layout_x', node.position('x'));
+          node.data('layout_y', node.position('y'));
+          node.data('layout_width', size.width);
+          node.data('layout_height', size.height);
+        }
+      });
+      updateNodesWithParentDataLive();
+    }
+  </script>
+</body>
+</html>
