@@ -380,13 +380,14 @@
           } else if (typeof n.data.x === "number" && typeof n.data.y === "number") {
             position = { x: n.data.x, y: n.data.y };
           }
+          const wrappedLabel = wrapLabel(n.data.label, 12);
           const nodeObj = {
             data: {
               ...n.data,
-              label: wrapLabel(n.data.label, 12),   // <-- BURASI
+              label: wrappedLabel,
               type: mappedType,
               originalType: n.data.type,
-              height: 30 * countLabelLines(wrappedLabel) + 40   // <-- EKLE
+              height: 80 * countLabelLines(wrappedLabel) + 50
             }
           };
           if (position) {
@@ -448,9 +449,10 @@ function applyCustomLayoutForAllocationTargets(cy) {
 
   function getNodeSize(n) {
     const label = n.data('label') || '';
+    const lines = countLabelLines(label);
     const font = "18px Arial";
     const width = computeNodeWidthByLabel(label, font, 100, 40);
-    const height = 60; // Sabit yükseklik (gerekirse dinamik ayarlayabilirsiniz)
+    const height = 40 * lines + 40; // Satır sayısına göre dinamik yükseklik
     return { width, height };
   }
 
@@ -885,7 +887,7 @@ function updateNodesWithParentDataLive(cyInstance) {
               'text-halign': 'center',
               'text-min-width': '150px',
               'text-wrap': 'wrap',
-              'text-max-width': 80,
+              'text-max-width': 800,
               'width': '300%',
               'color': '#000',
               'font-weight': 'bold',
@@ -897,7 +899,7 @@ function updateNodesWithParentDataLive(cyInstance) {
             style: {
               'font-size': '60px',
               'text-wrap': 'wrap',
-              'text-max-width': 80,
+              'text-max-width': 800,
 
             }
           },
@@ -918,7 +920,7 @@ function updateNodesWithParentDataLive(cyInstance) {
                 'text-halign': 'center',
                 'text-min-width': '150px',
                 'text-wrap': 'wrap',
-                'text-max-width': 80,
+                'text-max-width': 800,
                 'width': '300px',
                 'color': '#000',
                 'font-weight': 'bold',
@@ -936,7 +938,7 @@ function updateNodesWithParentDataLive(cyInstance) {
                 'font-size': '26px',
                 'width': 'label',
                 'text-wrap': 'wrap',
-                'text-max-width': 80,
+                'text-max-width': 800,
                 'height': 'data(height)',
                 'padding-left': '30px',
                 'padding-right': '30px',
@@ -959,7 +961,7 @@ function updateNodesWithParentDataLive(cyInstance) {
                 'font-size': '26px',
                 'width': 'label',
                 'text-wrap': 'wrap',
-                'text-max-width': 80,
+                'text-max-width': 800,
                 'height': 'data(height)',
                 'padding-left': '30px',
                 'padding-right': '30px',
@@ -995,7 +997,7 @@ function updateNodesWithParentDataLive(cyInstance) {
               'background-color': '#f52d05',
               'color': '#000',
               'text-wrap': 'wrap',
-              'text-max-width': 80,
+              'text-max-width': 800,
               'label': 'data(label)'
             }
           },
@@ -1005,7 +1007,7 @@ function updateNodesWithParentDataLive(cyInstance) {
               'background-color': '#f57105',
               'color': '#000',
               'text-wrap': 'wrap',
-              'text-max-width': 80,
+              'text-max-width': 800,
               'label': 'data(label)'
             }
           },
@@ -1015,7 +1017,7 @@ function updateNodesWithParentDataLive(cyInstance) {
               'background-color': '#f5c105',
               'color': '#000',
               'text-wrap': 'wrap',
-              'text-max-width': 80,
+              'text-max-width': 800,
               'label': 'data(label)'
             }
           },
