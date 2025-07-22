@@ -387,7 +387,7 @@
           const nodeObj = {
             data: {
               ...n.data,
-              label: wrapLabel(n.data.label),   // <-- BURAYI EKLE
+              label: wrapLabel(n.data.label, 12),   // <-- BURASI
               type: mappedType,
               originalType: n.data.type
             }
@@ -399,20 +399,7 @@
           elements.push(nodeObj);
         }
       }
-      if (json.elements && Array.isArray(json.elements.edges)) {
-        for (const e of json.elements.edges) {
-          elements.push({
-            data: {
-              id: e.data.id || (e.data.source + ':' + e.data.target),
-              source: e.data.source,
-              target: e.data.target,
-              label: e.data.label || '',
-              ...e.data
-            },
-            group: 'edges'
-          });
-        }
-      }
+      // edges kısmını değiştirmene gerek yok
       return elements;
     }
 
@@ -433,7 +420,7 @@ function computeNodeWidthByLabel(label, font = "18px Arial", minWidth = 100, pad
 }
 
 
-function wrapLabel(label, maxLen = 6) {
+function wrapLabel(label, maxLen = 12) {
   if (typeof label !== 'string') return label;
   if (label.length <= maxLen) return label;
   let result = '';
@@ -901,17 +888,19 @@ function updateNodesWithParentDataLive(cyInstance) {
               'width': '300%',
               'color': '#000',
               'font-weight': 'bold',
-              'font-size': '18px'
+              'font-size': '60px'
             }
           },
           {
             selector: 'node.has-children',
             style: {
-              'font-size': '60px'
+              'font-size': '60px',
+              'text-wrap': 'wrap',
+
             }
           },
           {
-            selector: 'node[originalType = "allocationtargetfunml"],node[type = "Bus"]',
+            selector: 'node[originalType = "allocationtargetfunml"],node[type = "Bus"]', // tüm parent nodeleri
             style: {
                 'border-width': 12,
                 'background-height': '30px',
@@ -930,7 +919,7 @@ function updateNodesWithParentDataLive(cyInstance) {
                 'width': '300px',
                 'color': '#000',
                 'font-weight': 'bold',
-                'font-size': '60px'
+                'font-size': '100px'
             }
           },
           {
@@ -943,6 +932,7 @@ function updateNodesWithParentDataLive(cyInstance) {
                 'text-halign': 'center',
                 'font-size': '26px',
                 'width': 'label',
+                'text-wrap': 'wrap',
                 'height': '150px',
                 'padding-left': '30px',
                 'padding-right': '30px',
@@ -950,7 +940,8 @@ function updateNodesWithParentDataLive(cyInstance) {
                 'padding-bottom': '20px',
                 'min-width': '100px',
                 'min-height': '50px',
-                'shape': 'round-rectangle'
+                'shape': 'round-rectangle',
+                'font-size': '60px'
             }
           },
           {
@@ -963,6 +954,7 @@ function updateNodesWithParentDataLive(cyInstance) {
                 'text-halign': 'center',
                 'font-size': '26px',
                 'width': 'label',
+                'text-wrap': 'wrap',
                 'height': '150px',
                 'padding-left': '30px',
                 'padding-right': '30px',
@@ -997,6 +989,7 @@ function updateNodesWithParentDataLive(cyInstance) {
             style: {
               'background-color': '#f52d05',
               'color': '#000',
+              'text-wrap': 'wrap',
               'label': 'data(label)'
             }
           },
@@ -1005,6 +998,7 @@ function updateNodesWithParentDataLive(cyInstance) {
             style: {
               'background-color': '#f57105',
               'color': '#000',
+              'text-wrap': 'wrap',
               'label': 'data(label)'
             }
           },
@@ -1013,6 +1007,7 @@ function updateNodesWithParentDataLive(cyInstance) {
             style: {
               'background-color': '#f5c105',
               'color': '#000',
+              'text-wrap': 'wrap',
               'label': 'data(label)'
             }
           },
