@@ -226,7 +226,7 @@
   <div id="cy"></div>
   <div id="magnifier-panel">
     <div id="magnifier-zoom-bar">
-      <span style="font-size:13px; color:#666;" title="Yakınlaştırma Oranı">🔍</span>
+      <span style="font-size:13px; color:#666;" title="Zoom Faktor">🔍</span>
       <input id="magnifier-zoom-range" type="range" min="1" max="10" step="0.1" value="2">
       <span id="magnifier-zoom-value">2.0x</span>
     </div>
@@ -380,7 +380,7 @@
           } else if (typeof n.data.x === "number" && typeof n.data.y === "number") {
             position = { x: n.data.x, y: n.data.y };
           }
-          const wrappedLabel = wrapLabel(n.data.label, 12);
+          const wrappedLabel = wrapLabel(n.data.label, 15);
           const nodeObj = {
             data: {
               ...n.data,
@@ -418,7 +418,7 @@ function computeNodeWidthByLabel(label, font = "18px Arial", minWidth = 100, pad
 }
 
 
-function wrapLabel(label, maxLen = 12) {
+function wrapLabel(label, maxLen = 15) {
   if (typeof label !== 'string') return label;
   if (label.length <= maxLen) return label;
   let result = '';
@@ -441,11 +441,11 @@ function countLabelLines(label) {
 // ---- YENİ CUSTOM LAYOUT ALGORITHM (çakışmasız ve ortalanmış) ----
 function applyCustomLayoutForAllocationTargets(cy) {
   // CHILD_PADDING ve VERTICAL_CHILD_PADDING iki katına çıkarıldı!
-  const CHILD_PADDING = 350; // Child node'lar arası boşluk (2 kat)
-  const CHILD_SIDE_PADDING = 50; // Parent-child kenar boşlukları (child'lar arası dikeyde de kullanılacak)
-  const VERTICAL_CHILD_PADDING = 200; // Sensor/Actuator child'ları arası dikey boşluk (2 kat)
-  const CHILD_SIDE_PADDING_SENSOR = 200;
-  const CHILD_SIDE_PADDING_ACTUATOR = 200;
+  const CHILD_PADDING = 450; // Child node'lar arası boşluk (2 kat)
+  const CHILD_SIDE_PADDING = 150; // Parent-child kenar boşlukları (child'lar arası dikeyde de kullanılacak)
+  const VERTICAL_CHILD_PADDING = 50; // Sensor/Actuator child'ları arası dikey boşluk (2 kat)
+  const CHILD_SIDE_PADDING_SENSOR = 250;
+  const CHILD_SIDE_PADDING_ACTUATOR = 250;
 
   function getNodeSize(n) {
     const label = n.data('label') || '';
@@ -661,7 +661,7 @@ function applyCustomLayoutForAllocationTargets(cy) {
   // --- Diğer parent'lar için child node'ları hizala ---
   parentNodes.forEach(parent => {
     const type = parent.data('componenttype');
-    if (type === "Sensor" || type === "Actuator") {
+    if (type === "Sensor" || type === "Sensor") {
       // Sensor ve Actuator tipi yukarıda özel sırada işlendi!
       return;
     }
@@ -891,13 +891,13 @@ function updateNodesWithParentDataLive(cyInstance) {
               'width': '300%',
               'color': '#000',
               'font-weight': 'bold',
-              'font-size': '60px'
+              'font-size': '80px'
             }
           },
           {
             selector: 'node.has-children',
             style: {
-              'font-size': '60px',
+              'font-size': '80px',
               'text-wrap': 'wrap',
               'text-max-width': 800,
 
@@ -913,8 +913,8 @@ function updateNodesWithParentDataLive(cyInstance) {
                 'background-width': '30px',
                 'height': 'data(height)',
                 'label': 'data(label)',
-                'text-margin-y': 70,
-                'padding': '100px',
+                'text-margin-y': 120,
+                'padding': '150px',
                 'shape': 'round-rectangle',
                 'text-valign': 'top',
                 'text-halign': 'center',
@@ -924,7 +924,7 @@ function updateNodesWithParentDataLive(cyInstance) {
                 'width': '300px',
                 'color': '#000',
                 'font-weight': 'bold',
-                'font-size': '100px'
+                'font-size': '120px'
             }
           },
           {
@@ -935,7 +935,6 @@ function updateNodesWithParentDataLive(cyInstance) {
                 'border-color': 'rgb(153, 141, 92)',
                 'text-valign': 'center',
                 'text-halign': 'center',
-                'font-size': '26px',
                 'width': 'label',
                 'text-wrap': 'wrap',
                 'text-max-width': 800,
@@ -947,7 +946,7 @@ function updateNodesWithParentDataLive(cyInstance) {
                 'min-width': '100px',
                 'min-height': '50px',
                 'shape': 'round-rectangle',
-                'font-size': '60px'
+                'font-size': '80px'
             }
           },
           {
@@ -958,7 +957,7 @@ function updateNodesWithParentDataLive(cyInstance) {
                 'border-width': 6,
                 'text-valign': 'center',
                 'text-halign': 'center',
-                'font-size': '26px',
+                'font-size': '80px',
                 'width': 'label',
                 'text-wrap': 'wrap',
                 'text-max-width': 800,
