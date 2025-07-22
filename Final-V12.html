@@ -260,7 +260,7 @@
         let zoom = cy.zoom();
         let minZoom = cy.minZoom();
         let maxZoom = cy.maxZoom();
-        let zoomFactor = (e.deltaY < 0) ? 1.1 : 0.9;
+        let zoomFactor = (e.deltaY < 0) ? 0.5 : 2;
         let newZoom = Math.max(minZoom, Math.min(maxZoom, zoom * zoomFactor));
         cy.zoom({
           level: newZoom,
@@ -478,6 +478,12 @@ function applyCustomLayoutForAllocationTargets(cy) {
     );
   }
 
+
+
+
+
+
+  
   // --- Parentleri yana yana hizala (Zusammenbau/ECU) ---
   const targetParents = parentNodes.filter(parent => {
     const type = parent.data('componenttype');
@@ -522,7 +528,7 @@ function applyCustomLayoutForAllocationTargets(cy) {
     }
 
     // Ortala: tam olarak avgX merkezi etrafında, toplam genişlik kadar sağa ve sola eşit olacak şekilde konumlandır!
-    let startX = avgX - totalWidth / 2;
+    let startX = -4000;
 
     // Parent'ların pozisyonunu güncelle
     targetParents.forEach((parent, i) => {
@@ -534,6 +540,11 @@ function applyCustomLayoutForAllocationTargets(cy) {
       startX += width + CHILD_PADDING;
     });
   }
+
+
+
+
+
 
   // --- SENSOR PARENTLERİ VE CHILD'LARI DİNAMİK DİKEY SIRALA ---
   const sensorParents = parentNodes.filter(parent => parent.data('componenttype') === "Sensor");
@@ -588,7 +599,7 @@ function applyCustomLayoutForAllocationTargets(cy) {
         childNodes.forEach((n, i) => {
           const size = getNodeSize(n);
           if (i > 0) currY += VERTICAL_CHILD_PADDING;
-          n.position({ x: childX - size.width / 2, y: currY + size.height / 2 + 100 }); // yukari kayma sorununu burda 100 ekleyerek cöztdük
+          n.position({ x: childX , y: currY + size.height }); // yukari kayma sorununu burda 100 ekleyerek cöztdük
           currY += size.height + CHILD_SIDE_PADDING_SENSOR;
         });
       }
@@ -597,6 +608,13 @@ function applyCustomLayoutForAllocationTargets(cy) {
     });
   }
 
+
+
+
+
+
+
+  
   // --- ACTUATOR PARENTLERİ VE CHILD'LARI DİNAMİK DİKEY SIRALA (Sensor ile aynı mantık) ---
   const actuatorParents = parentNodes.filter(parent => parent.data('componenttype') === "Actuator");
   if (actuatorParents.length > 0) {
@@ -1333,6 +1351,7 @@ function updateNodesWithParentDataLive(cyInstance) {
         alert('Bitte erst eine JSON Datei hochladen!');
         return;
       }
+      applyCustomLayoutForAllocationTargets(cyInstance);
       applyCustomLayoutForAllocationTargets(cyInstance);
       cyInstance.nodes().forEach(function (node) {
         if (node.data('originalType') === "allocationtargetfunml") {
