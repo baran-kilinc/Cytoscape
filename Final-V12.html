@@ -279,44 +279,37 @@
 
     function pushUndoState() {
       if (!cyInstance) return;
-      const nodes = cyInstance.nodes().map(node => {
-        const data = {...node.data()};
-        const pos = node.position();
-        data.position = {x: pos.x, y: pos.y};
-        return { data, position: { x: pos.x, y: pos.y } };
+      // Sadece node'ların pozisyonlarını kaydet
+      const positions = {};
+      cyInstance.nodes().forEach(node => {
+        positions[node.id()] = { x: node.position('x'), y: node.position('y') };
       });
-      const edges = cyInstance.edges().map(edge => ({
-        data: {...edge.data()}
-      }));
-      undoStack.push({
-        nodes: JSON.parse(JSON.stringify(nodes)),
-        edges: JSON.parse(JSON.stringify(edges))
-      });
+      undoStack.push(positions);
       if (undoStack.length > UNDO_STACK_LIMIT) {
         undoStack.shift();
       }
       document.getElementById('undoBtn').disabled = undoStack.length < 2;
     }
 
-    function restoreFromUndoState(state) {
-      if (!state) return;
-      const combinedElements = [
-        ...state.nodes.map(n => ({
-          data: n.data,
-          position: n.position,
-          group: 'nodes'
-        })),
-        ...state.edges.map(e => ({
-          data: e.data,
-          group: 'edges'
-        }))
-      ];
-      renderDriveAssistGraph(combinedElements);
+
+
+
+
+    function restoreFromUndoState(positions) {
+      if (!positions || !cyInstance) return;
+      cyInstance.nodes().forEach(node => {
+        const pos = positions[node.id()];
+        if (pos) node.position(pos);
+      });
+      cyInstance.fit(); // Grafiği ekrana sığdırmak için, istersen kaldırabilirsin
     }
+
+
+
 
     function tryUndo() {
       if (undoStack.length < 2) return;
-      undoStack.pop();
+      undoStack.pop(); // Son yapılanı sil
       const lastState = undoStack[undoStack.length - 1];
       restoreFromUndoState(lastState);
       document.getElementById('undoBtn').disabled = undoStack.length < 2;
@@ -1208,10 +1201,16 @@ function updateNodesWithParentDataLive(cyInstance) {
         pushUndoState();
       }
       attachMagnifierEvents();
+      cyInstance.on('dragfree', function(e) {
+        pushUndoState();
+      });
+      pushUndoState();
     }
 
+    
+
     function showContextMenu(x, y) {
-      const menu = document.getElementById('context-menu');
+      const menu = document.getElementById('context-menu'); // alles from Baran Layout
       menu.style.display = 'block';
       const maxX = window.innerWidth - menu.offsetWidth - 8;
       const maxY = window.innerHeight - menu.offsetHeight - 8;
@@ -1351,6 +1350,7 @@ function updateNodesWithParentDataLive(cyInstance) {
         alert('Bitte erst eine JSON Datei hochladen!');
         return;
       }
+      pushUndoState(); // Önce mevcut durumu kaydet
       applyCustomLayoutForAllocationTargets(cyInstance);
       applyCustomLayoutForAllocationTargets(cyInstance);
       cyInstance.nodes().forEach(function (node) {
