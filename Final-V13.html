@@ -220,51 +220,43 @@
 
 
         
-    /* ESKİ #search-container stilini SİLİN veya güncelleyin */
-    #search-container {
-      /* position, top, left, z-index özelliklerini kaldırın */
-      margin: 0 15px; /* Sağına ve soluna boşluk ekleyelim */
-    }
+    /* === YENİ EKLENECEK KOD BAŞLANGICI === */
 
-    /* ESKİ buton stillerinden position, top, right, z-index'i SİLİN */
-    #exportBtn, #customLayoutBtn, #undoBtn, #magnifier-btn {
-      /* position: absolute; */ /* Bu satırları silin veya yorum satırı yapın */
-      /* top: 18px; */
-      /* right: ...; */
-      /* z-index: 10; */
-      padding: 8px 16px;
-      color: #fff;
-      border: none;
-      border-radius: 6px;
-      font-size: 16px;
-      cursor: pointer;
-    }
-
-    /* ESKİ #magnifier-btn stilinden de position, top, right, z-index'i SİLİN */
-    #magnifier-btn {
-      background: none;
-      border: none;
-      cursor: pointer;
-      width: 36px;
-      height: 36px;
-      padding: 0;
-      margin-left: 10px; /* Diğer butonlarla arasına boşluk koyalım */
-    }
-
-    /* YENİ EKLENECEK stiller */
+    /* Üst kontrol panelini hizalamak için */
     #top-controls {
       display: flex;
       align-items: center;
-      padding: 10px;
+      padding: 10px 15px;
       gap: 15px; /* Elemanlar arasına boşluk koyar */
+      background-color: #f5f5f5;
+      border-bottom: 1px solid #ddd;
     }
 
+    #top-controls h2 {
+      margin: 0;
+      font-size: 20px;
+    }
+
+    /* Butonları sağa itmek için boşluk elemanı */
     .spacer {
-      flex-grow: 1; /* Bu eleman, kalan tüm boşluğu doldurarak sağdaki butonları sağa iter */
+      flex-grow: 1;
     }
 
-    #jsonFileInput {
-      margin-bottom: 0; /* Alttaki boşluğu kaldır, çünkü flexbox hizalıyor */
+    /* Arama kutusu */
+    #search-input {
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+      width: 250px;
+    }
+
+    /* Vurgulanan düğüm için stil */
+    .node-search-highlight {
+      background-color: #e3f2fd !important; /* Açık mavi arka plan */
+      border-color: #0d47a1 !important; /* Koyu mavi kenarlık */
+      border-width: 15px !important;
+      transition: background-color 0.3s ease, border-color 0.3s ease;
     }
 
 
@@ -275,21 +267,23 @@
   </style>
 </head>
 <body>
-  <h2>The Baran Layout</h2>
-  <input type="file" id="jsonFileInput" accept=".json">
-  <div id="search-container">
-    <input type="text" id="search-input" placeholder="Düğüm ara...">
+  <div id="top-controls">
+    <h2>The Baran Layout</h2>
+    <input type="file" id="jsonFileInput" accept=".json">
+    <div id="search-container">
+      <input type="text" id="search-input" placeholder="Suche...">
+    </div>
+    <div class="spacer"></div> <!-- Bu eleman butonları sağa itecek -->
+    <button id="customLayoutBtn">Localisation</button>
+    <button id="undoBtn" disabled>Undo</button>
+    <button id="exportBtn">Export JSON</button>
+    <button id="magnifier-btn" title="Büyüteç">
+      <svg viewBox="0 0 40 40" width="24" height="24" fill="none" stroke="black" stroke-width="2">
+        <circle cx="17" cy="17" r="10" stroke-width="2.5"/>
+        <line x1="27" y1="27" x2="36" y2="36" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+    </button>
   </div>
-  <div class="spacer"></div> <!-- Boşluk yaratmak için -->
-  <button id="customLayoutBtn">Localisation</button>
-  <button id="undoBtn" disabled>Undo</button>
-  <button id="exportBtn">Export JSON</button>
-  <button id="magnifier-btn" title="Büyüteç">
-    <svg viewBox="0 0 40 40" width="24" height="24" fill="none" stroke="black" stroke-width="2">
-      <circle cx="17" cy="17" r="10" stroke-width="2.5"/>
-      <line x1="27" y1="27" x2="36" y2="36" stroke-width="3" stroke-linecap="round"/>
-    </svg>
-  </button>
 
   <div id="cy"></div>
   <div id="magnifier-panel">
@@ -1280,7 +1274,6 @@ function updateNodesWithParentDataLive(cyInstance) {
 
 
 
-
     function setupSearch() {
       const searchInput = document.getElementById('search-input');
 
@@ -1288,11 +1281,13 @@ function updateNodesWithParentDataLive(cyInstance) {
         const searchTerm = this.value.trim().toLowerCase();
 
         if (!cyInstance) {
-          return;
+          return; // Grafik yoksa çık
         }
 
+        // Önceki tüm vurguları temizle
         cyInstance.nodes().removeClass('node-search-highlight');
 
+        // Arama kutusu boş değilse aramayı yap
         if (searchTerm.length > 0) {
           const matchedNodes = cyInstance.nodes().filter(node => {
             const nodeData = node.data(); // Düğümün tüm verisini al
@@ -1302,20 +1297,23 @@ function updateNodesWithParentDataLive(cyInstance) {
               if (Object.prototype.hasOwnProperty.call(nodeData, key)) {
                 const value = nodeData[key];
                 
-                // Değer string ise ve arama terimini içeriyorsa eşleşme bulduk demektir
+                // Değer bir metin ise ve arama terimini içeriyorsa eşleşme var demektir
                 if (typeof value === 'string' && value.toLowerCase().includes(searchTerm)) {
-                  return true; // Eşleşme bulundu, bu düğümü filtre sonucuna ekle
+                  return true; // Eşleşme bulundu, bu düğümü sonuçlara ekle
                 }
               }
             }
             return false; // Hiçbir alanda eşleşme bulunamadı
           });
 
+          // Eşleşen düğümlere vurgu stilini ekle
           matchedNodes.addClass('node-search-highlight');
         }
       });
     }
 
+    // Arama fonksiyonunu çağırarak olay dinleyiciyi aktif et
+    setupSearch();
 
 
 
