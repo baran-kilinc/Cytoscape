@@ -209,10 +209,78 @@
       min-width: 40px;
       text-align: left;
     }
+
+    #magnifier-zoom-value {
+      font-size: 12px;
+      color: #333;
+      min-width: 40px;
+      text-align: left;
+    }
+    
+
+
+        
+    /* ESKİ #search-container stilini SİLİN veya güncelleyin */
+    #search-container {
+      /* position, top, left, z-index özelliklerini kaldırın */
+      margin: 0 15px; /* Sağına ve soluna boşluk ekleyelim */
+    }
+
+    /* ESKİ buton stillerinden position, top, right, z-index'i SİLİN */
+    #exportBtn, #customLayoutBtn, #undoBtn, #magnifier-btn {
+      /* position: absolute; */ /* Bu satırları silin veya yorum satırı yapın */
+      /* top: 18px; */
+      /* right: ...; */
+      /* z-index: 10; */
+      padding: 8px 16px;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    /* ESKİ #magnifier-btn stilinden de position, top, right, z-index'i SİLİN */
+    #magnifier-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      width: 36px;
+      height: 36px;
+      padding: 0;
+      margin-left: 10px; /* Diğer butonlarla arasına boşluk koyalım */
+    }
+
+    /* YENİ EKLENECEK stiller */
+    #top-controls {
+      display: flex;
+      align-items: center;
+      padding: 10px;
+      gap: 15px; /* Elemanlar arasına boşluk koyar */
+    }
+
+    .spacer {
+      flex-grow: 1; /* Bu eleman, kalan tüm boşluğu doldurarak sağdaki butonları sağa iter */
+    }
+
+    #jsonFileInput {
+      margin-bottom: 0; /* Alttaki boşluğu kaldır, çünkü flexbox hizalıyor */
+    }
+
+
+
+
+
+
   </style>
 </head>
 <body>
   <h2>The Baran Layout</h2>
+  <input type="file" id="jsonFileInput" accept=".json">
+  <div id="search-container">
+    <input type="text" id="search-input" placeholder="Düğüm ara...">
+  </div>
+  <div class="spacer"></div> <!-- Boşluk yaratmak için -->
   <button id="customLayoutBtn">Localisation</button>
   <button id="undoBtn" disabled>Undo</button>
   <button id="exportBtn">Export JSON</button>
@@ -222,7 +290,7 @@
       <line x1="27" y1="27" x2="36" y2="36" stroke-width="3" stroke-linecap="round"/>
     </svg>
   </button>
-  <input type="file" id="jsonFileInput" accept=".json" style="margin-bottom:10px;">
+
   <div id="cy"></div>
   <div id="magnifier-panel">
     <div id="magnifier-zoom-bar">
@@ -279,16 +347,14 @@
 
     function pushUndoState() {
       if (!cyInstance) return;
+      // Sadece node'ların pozisyonlarını kaydet
       const positions = {};
       cyInstance.nodes().forEach(node => {
-        positions[node.id()] = node.position();
+        positions[node.id()] = { x: node.position('x'), y: node.position('y') };
       });
-      // Aynı state'i üst üste eklememek için kontrol eklendi
-      if (undoStack.length === 0 || JSON.stringify(undoStack[undoStack.length - 1]) !== JSON.stringify(positions)) {
-        undoStack.push(positions);
-        if (undoStack.length > UNDO_STACK_LIMIT) {
-          undoStack.shift();
-        }
+      undoStack.push(positions);
+      if (undoStack.length > UNDO_STACK_LIMIT) {
+        undoStack.shift();
       }
       document.getElementById('undoBtn').disabled = undoStack.length < 2;
     }
@@ -303,6 +369,7 @@
         const pos = positions[node.id()];
         if (pos) node.position(pos);
       });
+      cyInstance.fit(); // Grafiği ekrana sığdırmak için, istersen kaldırabilirsin
     }
 
 
@@ -315,7 +382,6 @@
       restoreFromUndoState(lastState);
       document.getElementById('undoBtn').disabled = undoStack.length < 2;
     }
-document.getElementById('undoBtn').addEventListener('click', tryUndo);
 
     document.getElementById('undoBtn').addEventListener('click', tryUndo);
 
@@ -1198,7 +1264,7 @@ function updateNodesWithParentDataLive(cyInstance) {
         }
       }
       cyInstance = cy;
-      cyInstance.on('position', pushUndoState);
+      addDragUndoEvents();
       if (undoStack.length === 0) {
         pushUndoState();
       }
@@ -1210,6 +1276,52 @@ function updateNodesWithParentDataLive(cyInstance) {
     }
 
     
+
+
+
+
+
+    function setupSearch() {
+      const searchInput = document.getElementById('search-input');
+
+      searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.trim().toLowerCase();
+
+        if (!cyInstance) {
+          return;
+        }
+
+        cyInstance.nodes().removeClass('node-search-highlight');
+
+        if (searchTerm.length > 0) {
+          const matchedNodes = cyInstance.nodes().filter(node => {
+            const nodeData = node.data(); // Düğümün tüm verisini al
+            
+            // Düğüm verisindeki her bir anahtar-değer çiftini kontrol et
+            for (const key in nodeData) {
+              if (Object.prototype.hasOwnProperty.call(nodeData, key)) {
+                const value = nodeData[key];
+                
+                // Değer string ise ve arama terimini içeriyorsa eşleşme bulduk demektir
+                if (typeof value === 'string' && value.toLowerCase().includes(searchTerm)) {
+                  return true; // Eşleşme bulundu, bu düğümü filtre sonucuna ekle
+                }
+              }
+            }
+            return false; // Hiçbir alanda eşleşme bulunamadı
+          });
+
+          matchedNodes.addClass('node-search-highlight');
+        }
+      });
+    }
+
+
+
+
+
+
+
 
     function showContextMenu(x, y) {
       const menu = document.getElementById('context-menu'); // alles from Baran Layout
