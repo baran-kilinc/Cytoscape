@@ -87,6 +87,12 @@
     body {
       position: relative;
     }
+    .node-search-highlight {
+      border-color: #1976d2 !important;
+      border-width: 16px !important;
+      box-shadow: 0 0 20px #1976d2 !important;
+      background-color: #e3f2fd !important;
+    }
     .highlight-l0 { background-color: #f52d05 !important; color: #000 !important; }
     .highlight-l1 { background-color: #f57105 !important; color: #000 !important; }
     .highlight-l2 { background-color: #f5c105 !important; color: #000 !important; }
@@ -243,7 +249,7 @@
     }
 
     /* Arama kutusu */
-    #search-input {
+    #searchBox {
       padding: 8px 12px;
       border-radius: 6px;
       border: 1px solid #ccc;
@@ -271,7 +277,7 @@
     <h2>The Baran Layout</h2>
     <input type="file" id="jsonFileInput" accept=".json">
     <div id="search-container">
-      <input type="text" id="search-input" placeholder="Suche...">
+      <input type="text" id="searchBox" placeholder="Suche...">
     </div>
     <div class="spacer"></div> <!-- Bu eleman butonları sağa itecek -->
     <button id="customLayoutBtn">Localisation</button>
@@ -961,7 +967,7 @@ function updateNodesWithParentDataLive(cyInstance) {
               'text-min-width': '150px',
               'text-wrap': 'wrap',
               'text-max-width': 800,
-              'width': '300%',
+              'width': '300px',
               'color': '#000',
               'font-weight': 'bold',
               'font-size': '80px'
@@ -1045,6 +1051,16 @@ function updateNodesWithParentDataLive(cyInstance) {
             }
           },
           {
+            selector: 'node.node-search-highlight',
+            style: {
+              'border-color': '#1976d2',
+              'border-width': 16,
+              'box-shadow': '0 0 20px #1976d2',
+              'background-color': '#e3f2fd',
+              'z-index': 999
+            }
+          },
+          {
             selector: 'edge',
             style: {
               'width': 10,
@@ -1094,7 +1110,7 @@ function updateNodesWithParentDataLive(cyInstance) {
             }
           },
           {
-            selector: 'edge.edge-highlight-l0',
+            selector: '.edge-highlight-l0',
             style: {
               'line-color': '#e60073',
               'target-arrow-color': '#e60073',
@@ -1102,7 +1118,7 @@ function updateNodesWithParentDataLive(cyInstance) {
             }
           },
           {
-            selector: 'edge.edge-highlight-l1',
+            selector: '.edge-highlight-l1',
             style: {
               'line-color': '#ff9800',
               'target-arrow-color': '#ff9800',
@@ -1110,7 +1126,7 @@ function updateNodesWithParentDataLive(cyInstance) {
             }
           },
           {
-            selector: 'edge.edge-highlight-l2',
+            selector: '.edge-highlight-l2',
             style: {
               'line-color': '#ffeb3b',
               'target-arrow-color': '#ffeb3b',
@@ -1274,46 +1290,37 @@ function updateNodesWithParentDataLive(cyInstance) {
 
 
 
-    function setupSearch() {
-      const searchInput = document.getElementById('search-input');
+    function highlightSearchResults(searchTerm) {
+      if (!cyInstance) return;
+      cyInstance.nodes().removeClass('node-search-highlight');
+      if (!searchTerm || searchTerm.trim() === "") return;
 
-      searchInput.addEventListener('input', function() {
-        const searchTerm = this.value.trim().toLowerCase();
+      const term = searchTerm.trim().toLowerCase();
 
-        if (!cyInstance) {
-          return; // Grafik yoksa çık
-        }
-
-        // Önceki tüm vurguları temizle
-        cyInstance.nodes().removeClass('node-search-highlight');
-
-        // Arama kutusu boş değilse aramayı yap
-        if (searchTerm.length > 0) {
-          const matchedNodes = cyInstance.nodes().filter(node => {
-            const nodeData = node.data(); // Düğümün tüm verisini al
-            
-            // Düğüm verisindeki her bir anahtar-değer çiftini kontrol et
-            for (const key in nodeData) {
-              if (Object.prototype.hasOwnProperty.call(nodeData, key)) {
-                const value = nodeData[key];
-                
-                // Değer bir metin ise ve arama terimini içeriyorsa eşleşme var demektir
-                if (typeof value === 'string' && value.toLowerCase().includes(searchTerm)) {
-                  return true; // Eşleşme bulundu, bu düğümü sonuçlara ekle
-                }
-              }
-            }
-            return false; // Hiçbir alanda eşleşme bulunamadı
-          });
-
-          // Eşleşen düğümlere vurgu stilini ekle
-          matchedNodes.addClass('node-search-highlight');
+      cyInstance.nodes().forEach(node => {
+        const data = node.data();
+        for (const key in data) {
+          if (
+            typeof data[key] === "string" &&
+            data[key].toLowerCase().includes(term)
+          ) {
+            node.addClass('node-search-highlight');
+            break;
+          } else if (
+            typeof data[key] === "number" &&
+            data[key].toString().includes(term)
+          ) {
+            node.addClass('node-search-highlight');
+            break;
+          }
         }
       });
     }
 
-    // Arama fonksiyonunu çağırarak olay dinleyiciyi aktif et
-    setupSearch();
+    // Event listener
+    document.getElementById('searchBox').addEventListener('input', function(e) {
+      highlightSearchResults(e.target.value);
+    });
 
 
 
