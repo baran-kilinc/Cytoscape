@@ -458,7 +458,21 @@
           elements.push(nodeObj);
         }
       }
-      // edges kısmını değiştirmene gerek yok
+      // EDGES KISMI EKLENDİ
+      if (json.elements && Array.isArray(json.elements.edges)) {
+        for (const e of json.elements.edges) {
+          elements.push({
+            data: {
+              id: e.data.id || (e.data.source + ':' + e.data.target),
+              source: e.data.source,
+              target: e.data.target,
+              label: e.data.label || '',
+              ...e.data
+            },
+            group: 'edges'
+          });
+        }
+      }
       return elements;
     }
 
