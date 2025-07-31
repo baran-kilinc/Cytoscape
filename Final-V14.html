@@ -283,6 +283,7 @@
     <button id="customLayoutBtn">Localisation</button>
     <button id="undoBtn" disabled>Undo</button>
     <button id="exportBtn">Export JSON</button>
+    <button id="moveMostConnectedBtn">Finde die zentrale Node</button>
     <button id="magnifier-btn" title="Büyüteç">
       <svg viewBox="0 0 40 40" width="24" height="24" fill="none" stroke="black" stroke-width="2">
         <circle cx="17" cy="17" r="10" stroke-width="2.5"/>
@@ -313,6 +314,22 @@
   </div>
   <script>
 
+
+
+
+
+      function findMostConnectedNode(cy) {
+        let maxDegree = -1;
+        let maxNode = null;
+        cy.nodes().forEach(node => {
+          const degree = node.connectedEdges().length;
+          if (degree > maxDegree) {
+            maxDegree = degree;
+            maxNode = node;
+          }
+        });
+        return maxNode;
+      }
 
 
     // --- Cytoscape mouse zoom fix ---
@@ -458,7 +475,21 @@
           elements.push(nodeObj);
         }
       }
-      // edges kısmını değiştirmene gerek yok
+      // EDGES KISMI EKLENDİ
+      if (json.elements && Array.isArray(json.elements.edges)) {
+        for (const e of json.elements.edges) {
+          elements.push({
+            data: {
+              id: e.data.id || (e.data.source + ':' + e.data.target),
+              source: e.data.source,
+              target: e.data.target,
+              label: e.data.label || '',
+              ...e.data
+            },
+            group: 'edges'
+          });
+        }
+      }
       return elements;
     }
 
@@ -967,7 +998,7 @@ function updateNodesWithParentDataLive(cyInstance) {
               'text-min-width': '150px',
               'text-wrap': 'wrap',
               'text-max-width': 800,
-              'width': '300%',
+              'width': '300px',
               'color': '#000',
               'font-weight': 'bold',
               'font-size': '80px'
@@ -1110,7 +1141,7 @@ function updateNodesWithParentDataLive(cyInstance) {
             }
           },
           {
-            selector: 'edge.edge-highlight-l0',
+            selector: '.edge-highlight-l0',
             style: {
               'line-color': '#e60073',
               'target-arrow-color': '#e60073',
@@ -1118,7 +1149,7 @@ function updateNodesWithParentDataLive(cyInstance) {
             }
           },
           {
-            selector: 'edge.edge-highlight-l1',
+            selector: '.edge-highlight-l1',
             style: {
               'line-color': '#ff9800',
               'target-arrow-color': '#ff9800',
@@ -1126,7 +1157,7 @@ function updateNodesWithParentDataLive(cyInstance) {
             }
           },
           {
-            selector: 'edge.edge-highlight-l2',
+            selector: '.edge-highlight-l2',
             style: {
               'line-color': '#ffeb3b',
               'target-arrow-color': '#ffeb3b',
@@ -1397,6 +1428,40 @@ function updateNodesWithParentDataLive(cyInstance) {
         }, 10);
       }
     });
+
+
+    document.getElementById('moveMostConnectedBtn').addEventListener('click', () => {
+      if (!cyInstance) return;
+      const mostConnectedNode = findMostConnectedNode(cyInstance);
+      if (!mostConnectedNode) return;
+      const parentId = mostConnectedNode.data('parent');
+      if (!parentId) return;
+      const parentNode = cyInstance.getElementById(parentId);
+      const childNodes = cyInstance.nodes().filter(n => n.data('parent') === parentId).toArray();
+
+      // Parent ve child'ları bir araya topla
+      const groupNodes = [parentNode, ...childNodes];
+
+      // Localisation algoritmasındaki gibi mesafe ayarla
+      // Yatayda dizmek için:
+      let startX = -2000;
+      let y = 50;
+      const CHILD_PADDING = 150; // Localisation'daki ile aynı olsun
+
+      groupNodes.forEach((node, i) => {
+        const size = getNodeSize(node); // Bu fonksiyon zaten dosyada var
+        node.position({
+          x: startX + size.width / 2,
+          y: y + size.height / 2
+        });
+        startX += size.width + CHILD_PADDING*4;
+      });
+
+      cyInstance.fit(groupNodes, 100);
+    });
+
+
+
 
     document.getElementById('jsonFileInput').addEventListener('change', function(evt) {
       const file = evt.target.files[0];
