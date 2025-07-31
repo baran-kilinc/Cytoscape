@@ -288,10 +288,29 @@
 </head>
 <body>
 <!-- Bunu <body> içinde herhangi bir yere ekle -->
-  <div id="error-modal" style="display:none; position:fixed; top:40px; right:40px; min-width:320px; max-width:420px; background:#fff4f4; color:#c00; border:1px solid #c00; border-radius:10px; box-shadow:0 2px 12px rgba(0,0,0,0.18); z-index:9999; font-family:monospace;">
-    <button id="error-modal-close" style="position:absolute; top:6px; right:10px; background:none; border:none; color:#c00; font-size:22px; font-weight:bold; cursor:pointer;">&#10005;</button>
-    <div id="error-modal-message" style="padding:24px 24px 18px 24px; white-space:pre-wrap; font-size:16px; user-select:text;"></div>
+<!-- HATA PANELİ (body içinde bir yere ekle, örn. top-controls'un hemen üstüne) -->
+<div id="error-modal" style="
+  display:none; 
+  position:fixed; 
+  top:40px; 
+  right:40px; 
+  min-width:320px; 
+  max-width:420px; 
+  background:#fff4f4; 
+  color:#c00; 
+  border:1px solid #c00; 
+  border-radius:10px; 
+  box-shadow:0 2px 12px rgba(0,0,0,0.18); 
+  z-index:9999; 
+  font-family:monospace;">
+  <button id="error-modal-close" 
+    style="position:absolute; top:6px; right:10px; background:none; border:none; color:#c00; font-size:22px; font-weight:bold; cursor:pointer;">
+    &#10005;
+  </button>
+  <div id="error-modal-message" 
+    style="padding:24px 24px 18px 24px; white-space:pre-wrap; font-size:16px; user-select:text;">
   </div>
+</div>
   <div id="top-controls">
     <h2>The Baran Layout</h2>
     <input type="file" id="jsonFileInput" accept=".json">
@@ -336,6 +355,7 @@
   </div>
   <script>
 
+      // Bunu scriptinin en başına veya sonuna ekle (bir defa!)
       function showErrorMessage(msg) {
         var modal = document.getElementById('error-modal');
         var messageDiv = document.getElementById('error-modal-message');
