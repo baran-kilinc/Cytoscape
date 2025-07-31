@@ -287,30 +287,21 @@
   </style>
 </head>
 <body>
-<!-- Bunu <body> içinde herhangi bir yere ekle -->
-<!-- HATA PANELİ (body içinde bir yere ekle, örn. top-controls'un hemen üstüne) -->
-<div id="error-modal" style="
-  display:none; 
-  position:fixed; 
-  top:40px; 
-  right:40px; 
-  min-width:320px; 
-  max-width:420px; 
-  background:#fff4f4; 
-  color:#c00; 
-  border:1px solid #c00; 
-  border-radius:10px; 
-  box-shadow:0 2px 12px rgba(0,0,0,0.18); 
-  z-index:9999; 
-  font-family:monospace;">
-  <button id="error-modal-close" 
-    style="position:absolute; top:6px; right:10px; background:none; border:none; color:#c00; font-size:22px; font-weight:bold; cursor:pointer;">
-    &#10005;
-  </button>
-  <div id="error-modal-message" 
-    style="padding:24px 24px 18px 24px; white-space:pre-wrap; font-size:16px; user-select:text;">
+  
+<!-- Hata paneli -->
+<div id="error-panel" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(255,255,255,0.95); z-index:99999;">
+  <button id="error-close-btn" style="position:absolute; top:20px; right:30px; background:#f44336; color:#fff; border:none; border-radius:50%; width:40px; height:40px; font-size:22px; cursor:pointer;">&times;</button>
+  <div style="position:absolute; top:80px; left:50%; transform:translateX(-50%); max-width:600px; background:#fff; padding:40px 30px 30px 30px; border-radius:12px; box-shadow:0 4px 40px rgba(0,0,0,0.09); font-family:'Segoe UI', Arial;">
+    <h2 style="margin-top:0;">Fehlermeldung!</h2>
+    <div>
+      <textarea id="error-message-area" readonly style="width:100%; height:160px; font-size:16px; padding:10px; resize:vertical; border:1px solid #999; border-radius:8px; background:#f6f6f6; margin-bottom:16px;"></textarea>
+      <button id="error-copy-btn" style="background:#1976d2; color:#fff; border:none; border-radius:6px; padding:7px 18px; font-size:16px; cursor:pointer;">Kopieren</button>
+    </div>
   </div>
 </div>
+
+
+
   <div id="top-controls">
     <h2>The Baran Layout</h2>
     <input type="file" id="jsonFileInput" accept=".json">
@@ -355,33 +346,47 @@
   </div>
   <script>
 
-      // Bunu scriptinin en başına veya sonuna ekle (bir defa!)
-      function showErrorMessage(msg) {
-        var modal = document.getElementById('error-modal');
-        var messageDiv = document.getElementById('error-modal-message');
-        messageDiv.textContent = msg;
-        modal.style.display = 'block';
-      }
-      document.getElementById('error-modal-close').onclick = function() {
-        document.getElementById('error-modal').style.display = 'none';
-      };
+// Hata panelini gösteren fonksiyon
+function showErrorPanel(errorMsg) {
+  document.getElementById('error-panel').style.display = 'block';
+  document.getElementById('error-message-area').value = errorMsg;
+}
+
+// Paneli kapat
+document.getElementById('error-close-btn').addEventListener('click', function() {
+  document.getElementById('error-panel').style.display = 'none';
+});
+
+// Kopyala butonu
+document.getElementById('error-copy-btn').addEventListener('click', function() {
+  const textarea = document.getElementById('error-message-area');
+  textarea.select();
+  document.execCommand('copy');
+});
+
+// Örnek: Dosya okuma eventine hata yakalama ekle
+document.getElementById('jsonFileInput').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    try {
+      const json = JSON.parse(ev.target.result);
+      // Devam: json ile işlemler...
+      // eğer burada hata olursa catch'e düşer
+    } catch (err) {
+      // Hem JS hatası hem de browser'ın verdiği hata mesajı
+      showErrorPanel("Hatalı veri: " + err.message);
+    }
+  };
+  reader.onerror = function(ev) {
+    // Browser hata mesajı
+    showErrorPanel("Dosya okunamadı: " + reader.error.message);
+  };
+  reader.readAsText(file);
+});
 
 
-
-      document.getElementById('jsonFileInput').addEventListener('change', function(e) {
-        var file = e.target.files[0];
-        if (!file) return;
-        var reader = new FileReader();
-        reader.onload = function(ev) {
-          try {
-            var json = JSON.parse(ev.target.result);
-            // ...veriyi işleme kodun...
-          } catch (err) {
-            showErrorMessage('Dosya okunamadı veya JSON geçersiz!\n\n' + err.message);
-          }
-        };
-        reader.readAsText(file);
-      });
 
       function findMostConnectedNode(cy) {
         let maxDegree = -1;
@@ -1540,7 +1545,7 @@ function updateNodesWithParentDataLive(cyInstance) {
           const elements = parseDriveAssistData(json);
           renderDriveAssistGraph(elements);
         } catch (err) {
-          alert('Invalid JSON: ' + err.message);
+          showErrorPanel('Invalid JSON: ' + err.message);
         }
       };
       reader.readAsText(file);
@@ -1548,7 +1553,7 @@ function updateNodesWithParentDataLive(cyInstance) {
 
     document.getElementById('exportBtn').addEventListener('click', function() {
       if (!cyInstance) {
-        alert('Öfnnen Sie bitte eine JSON-Datei.');
+        showErrorPanel('Öfnnen Sie bitte eine JSON-Datei.');
         return;
       }
       updateNodesWithParentDataLive();
@@ -1596,7 +1601,7 @@ function updateNodesWithParentDataLive(cyInstance) {
 
     document.getElementById('customLayoutBtn').onclick = function() {
       if (!cyInstance) {
-        alert('Bitte erst eine JSON Datei hochladen!');
+        showErrorPanel('Bitte erst eine JSON Datei hochladen!');
         return;
       }
       pushUndoState(); // Önce mevcut durumu kaydet
@@ -1622,8 +1627,6 @@ function updateNodesWithParentDataLive(cyInstance) {
         pushUndoState();
       });
     }
-
-
   </script>
 </body>
 </html>
