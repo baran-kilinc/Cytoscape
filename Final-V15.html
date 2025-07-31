@@ -336,8 +336,15 @@
   </div>
   <script>
 
-
-
+      function showErrorMessage(msg) {
+        var modal = document.getElementById('error-modal');
+        var messageDiv = document.getElementById('error-modal-message');
+        messageDiv.textContent = msg;
+        modal.style.display = 'block';
+      }
+      document.getElementById('error-modal-close').onclick = function() {
+        document.getElementById('error-modal').style.display = 'none';
+      };
 
 
 
@@ -1596,16 +1603,7 @@ function updateNodesWithParentDataLive(cyInstance) {
       });
     }
 
-        // Bunu scriptlerin sonuna ekle
-    function showErrorMessage(msg) {
-      var modal = document.getElementById('error-modal');
-      var messageDiv = document.getElementById('error-modal-message');
-      messageDiv.textContent = msg;
-      modal.style.display = 'block';
-    }
-    document.getElementById('error-modal-close').onclick = function() {
-      document.getElementById('error-modal').style.display = 'none';
-    };
+
   </script>
 </body>
 </html>
