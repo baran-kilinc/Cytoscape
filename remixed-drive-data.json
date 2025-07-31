@@ -99,7 +99,7 @@
 					"maxiumASILDesign": "",
 					"domain": "Connected Company",
 					"responsible": "",
-					"type": "logicalclusterfunml",
+					"type": "logicalsubcontextfunml",
 					"url": "mdel://75c814e4-3ff5-4931-9f31-74c6f90d55c5?projectID\u003dtwcloud%3A%2F98fb10b6-3535-4c6a-862c-d41b539554ab%2Fd470aa0a-ffff-4397-94ec-f7aa13610003\u0026serverType\u003desiserver\u0026projectBranch\u003dVE\u0026serverName\u003dmagicdraw-prod.bmwgroup.net%3A27110\u0026projectName\u003dBoardnet+Architecture+SP2025\u0026elementName\u003dLogical+Cluster+%5BFunML%5D+IcClusterFunctions\u0026metaType\u003dClass\u0026elementQName\u003dSolution%3A%3AConnected+Company%3A%3ALogical+Clusters%3A%3AOnboardPlattform%3A%3AIcClusterFunctions"
 				}
 			},
@@ -171,7 +171,7 @@
 					"maxiumASILDesign": "B",
 					"domain": "Advanced Driver Assistance Systems",
 					"responsible": "",
-					"type": "logicalclusterfunml",
+					"type": "logicalsubcontextfunml",
 					"url": "mdel://c96f5de5-983d-4831-96d2-23b119225953?projectID\u003dtwcloud%3A%2F98fb10b6-3535-4c6a-862c-d41b539554ab%2Fd470aa0a-ffff-4397-94ec-f7aa13610003\u0026serverType\u003desiserver\u0026projectBranch\u003dVE\u0026serverName\u003dmagicdraw-prod.bmwgroup.net%3A27110\u0026projectName\u003dBoardnet+Architecture+SP2025\u0026elementName\u003dLogical+Cluster+%5BFunML%5D+Arbitration+Driver+Display+and+Warning\u0026metaType\u003dClass\u0026elementQName\u003dSolution%3A%3AAdvanced+Driver+Assistance+Systems%3A%3ALogical+Clusters%3A%3A04+Function+Comfort%3A%3AArbitration+Driver+Display+and+Warning"
 				}
 			},
@@ -331,7 +331,7 @@
 					"maxiumASILDesign": "",
 					"domain": "AuthorityandHighSecurityVehicles",
 					"responsible": "",
-					"type": "logicalclusterfunml",
+					"type": "logicalsubcontextfunml",
 					"url": "mdel://8d027a89-6565-4f1e-86c8-90c87be695ba?projectID\u003dtwcloud%3A%2F98fb10b6-3535-4c6a-862c-d41b539554ab%2Fd470aa0a-ffff-4397-94ec-f7aa13610003\u0026serverType\u003desiserver\u0026projectBranch\u003dVE\u0026serverName\u003dmagicdraw-prod.bmwgroup.net%3A27110\u0026projectName\u003dBoardnet+Architecture+SP2025\u0026elementName\u003dLogical+Cluster+%5BFunML%5D+AuthorityVehicleAdasCoordinator\u0026metaType\u003dClass\u0026elementQName\u003dSolution%3A%3AAuthorityandHighSecurityVehicles%3A%3ALogical+Clusters%3A%3AAuthorityVehiclesAD%3A%3AAuthorityVehicleAdasCoordinator"
 				}
 			},
@@ -390,7 +390,7 @@
 					"maxiumASILDesign": "",
 					"domain": "System",
 					"responsible": "",
-					"type": "logicalclusterfunml",
+					"type": "logicalsubcontextfunml",
 					"url": "mdel://03383a6c-0253-4a7b-a202-101a367f8bdd?projectID\u003dtwcloud%3A%2F98fb10b6-3535-4c6a-862c-d41b539554ab%2Fd470aa0a-ffff-4397-94ec-f7aa13610003\u0026serverType\u003desiserver\u0026projectBranch\u003dVE\u0026serverName\u003dmagicdraw-prod.bmwgroup.net%3A27110\u0026projectName\u003dBoardnet+Architecture+SP2025\u0026elementName\u003dLogical+Cluster+%5BFunML%5D+SecureFeatureActivationOverTheAirMasterOnboard\u0026metaType\u003dClass\u0026elementQName\u003dSolution%3A%3ASystem%3A%3ALogical+Clusters%3A%3ASecureFeatureActivation%3A%3ASecureFeatureActivationOverTheAirMasterOnboard"
 				}
 			},
@@ -434,7 +434,7 @@
 					"maxiumASILDesign": "",
 					"domain": "Body Cabin Crash",
 					"responsible": "",
-					"type": "logicalclusterfunml",
+					"type": "logicalsubcontextfunml",
 					"url": "mdel://b55443a2-0b1e-46f1-9acf-e4593fc861be?projectID\u003dtwcloud%3A%2F98fb10b6-3535-4c6a-862c-d41b539554ab%2Fd470aa0a-ffff-4397-94ec-f7aa13610003\u0026serverType\u003desiserver\u0026projectBranch\u003dVE\u0026serverName\u003dmagicdraw-prod.bmwgroup.net%3A27110\u0026projectName\u003dBoardnet+Architecture+SP2025\u0026elementName\u003dLogical+Cluster+%5BFunML%5D+CentralisedLockOrUnlockControllingFunctionMaster\u0026metaType\u003dClass\u0026elementQName\u003dSolution%3A%3ABody+Cabin+Crash%3A%3ALogical+Clusters%3A%3ACarAccess%3A%3AFunctionmasters%3A%3ACentralisedLockOrUnlockControllingFunctionMaster"
 				}
 			},
@@ -448,7 +448,7 @@
 					"maxiumASILDesign": "",
 					"domain": "Body Cabin Crash",
 					"responsible": "",
-					"type": "logicalclusterfunml",
+					"type": "logicalsubcontextfunml",
 					"url": "mdel://bac401c0-2ee4-4ebc-b154-f8ea6eb34214?projectID\u003dtwcloud%3A%2F98fb10b6-3535-4c6a-862c-d41b539554ab%2Fd470aa0a-ffff-4397-94ec-f7aa13610003\u0026serverType\u003desiserver\u0026projectBranch\u003dVE\u0026serverName\u003dmagicdraw-prod.bmwgroup.net%3A27110\u0026projectName\u003dBoardnet+Architecture+SP2025\u0026elementName\u003dLogical+Cluster+%5BFunML%5D+DriverAssistanceSystemsEDR\u0026metaType\u003dClass\u0026elementQName\u003dSolution%3A%3ABody+Cabin+Crash%3A%3ALogical+Clusters%3A%3AVehicleSafety%3A%3AActuators%3A%3ADriverAssistanceSystemsEDR"
 				}
 			},
