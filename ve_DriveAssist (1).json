@@ -124,7 +124,7 @@
 					"domain": "Library",
 					"responsible": "",
 					"type": "allocationtargetfunml",
-					"componenttype": "Aktuator",
+					"componenttype": "Actuator",
 					"url": "mdel://fa9c08f4-331f-47b5-a6c6-5dfc8f3fc9d9?projectID=twcloud%3A%2F98fb10b6-3535-4c6a-862c-d41b539554ab%2Fd470aa0a-ffff-4397-94ec-f7aa13610003&serverType=esiserver&projectBranch=VE&serverName=magicdraw-prod.bmwgroup.net%3A27110&projectName=Boardnet+Architecture+SP2025&elementName=Allocation+Target+%5BFunML%5D+CCE_HR1&metaType=Class&elementQName=Library%3A%3AAllocationTargets%3A%3AOnboard+ECUs%3A%3ACCE_HR1"
 				}
 			},
@@ -152,7 +152,7 @@
 					"domain": "Library",
 					"responsible": "",
 					"type": "allocationtargetfunml",
-					"componenttype": "Aktuator",
+					"componenttype": "Actuator",
 					"url": "mdel://c8c39c75-feec-4c49-923b-c7a3f1b898f0?projectID=twcloud%3A%2F98fb10b6-3535-4c6a-862c-d41b539554ab%2Fd470aa0a-ffff-4397-94ec-f7aa13610003&serverType=esiserver&projectBranch=VE&serverName=magicdraw-prod.bmwgroup.net%3A27110&projectName=Boardnet+Architecture+SP2025&elementName=Allocation+Target+%5BFunML%5D+CCE_HL1&metaType=Class&elementQName=Library%3A%3AAllocationTargets%3A%3AOnboard+ECUs%3A%3ACCE_HL1"
 				}
 			},
@@ -474,7 +474,7 @@
 					"domain": "Library",
 					"responsible": "",
 					"type": "allocationtargetfunml",
-					"componenttype": "Aktuator",
+					"componenttype": "Actuator",
 					"url": "mdel://f1e65493-9548-4d55-aa60-ea74d61ccd1b?projectID=twcloud%3A%2F98fb10b6-3535-4c6a-862c-d41b539554ab%2Fd470aa0a-ffff-4397-94ec-f7aa13610003&serverType=esiserver&projectBranch=VE&serverName=magicdraw-prod.bmwgroup.net%3A27110&projectName=Boardnet+Architecture+SP2025&elementName=Allocation+Target+%5BFunML%5D+CCE_VL&metaType=Class&elementQName=Library%3A%3AAllocationTargets%3A%3AOnboard+ECUs%3A%3ACCE_VL"
 				}
 			},
@@ -600,7 +600,7 @@
 					"domain": "Library",
 					"responsible": "",
 					"type": "allocationtargetfunml",
-					"componenttype": "Aktuator",
+					"componenttype": "Actuator",
 					"url": "mdel://ae72e4cc-6d56-456b-88ac-af95e8e0b1be?projectID=twcloud%3A%2F98fb10b6-3535-4c6a-862c-d41b539554ab%2Fd470aa0a-ffff-4397-94ec-f7aa13610003&serverType=esiserver&projectBranch=VE&serverName=magicdraw-prod.bmwgroup.net%3A27110&projectName=Boardnet+Architecture+SP2025&elementName=Allocation+Target+%5BFunML%5D+CID&metaType=Class&elementQName=Library%3A%3AAllocationTargets%3A%3AOnboard+ECUs%3A%3ACID"
 				}
 			},
@@ -796,7 +796,6 @@
 					"domain": "Library",
 					"responsible": "",
 					"type": "allocationtargetfunml",
-					"componenttype": "ECU",
 					"url": "mdel://1accf23f-e303-4e11-806d-e55db33cba14?projectID=twcloud%3A%2F98fb10b6-3535-4c6a-862c-d41b539554ab%2Fd470aa0a-ffff-4397-94ec-f7aa13610003&serverType=esiserver&projectBranch=VE&serverName=magicdraw-prod.bmwgroup.net%3A27110&projectName=Boardnet+Architecture+SP2025&elementName=Allocation+Target+%5BFunML%5D+IPN_PERF&metaType=Class&elementQName=Library%3A%3AAllocationTargets%3A%3AOnboard+ECUs%3A%3AIPN_PERF"
 				}
 			},
@@ -810,7 +809,7 @@
 					"domain": "Library",
 					"responsible": "",
 					"type": "allocationtargetfunml",
-					"componenttype": "Aktuator",
+					"componenttype": "Actuator",
 					"url": "mdel://9450cf53-95bf-4aa1-a0ef-e8777ca83789?projectID=twcloud%3A%2F98fb10b6-3535-4c6a-862c-d41b539554ab%2Fd470aa0a-ffff-4397-94ec-f7aa13610003&serverType=esiserver&projectBranch=VE&serverName=magicdraw-prod.bmwgroup.net%3A27110&projectName=Boardnet+Architecture+SP2025&elementName=Allocation+Target+%5BFunML%5D+DFAL_DA_R&metaType=Class&elementQName=Library%3A%3AAllocationTargets%3A%3AOnboard+ECUs%3A%3ADFAL_DA_R"
 				}
 			},
@@ -1034,7 +1033,7 @@
 					"domain": "Library",
 					"responsible": "",
 					"type": "allocationtargetfunml",
-					"componenttype": "Aktuator",
+					"componenttype": "Actuator",
 					"url": "mdel://8ba6d321-d5e6-4b24-8950-a04a50fc43e1?projectID=twcloud%3A%2F98fb10b6-3535-4c6a-862c-d41b539554ab%2Fd470aa0a-ffff-4397-94ec-f7aa13610003&serverType=esiserver&projectBranch=VE&serverName=magicdraw-prod.bmwgroup.net%3A27110&projectName=Boardnet+Architecture+SP2025&elementName=Allocation+Target+%5BFunML%5D+CCE_HL2&metaType=Class&elementQName=Library%3A%3AAllocationTargets%3A%3AOnboard+ECUs%3A%3ACCE_HL2"
 				}
 			},
@@ -1090,7 +1089,7 @@
 					"domain": "Library",
 					"responsible": "",
 					"type": "allocationtargetfunml",
-					"componenttype": "Aktuator-Sensor",
+					"componenttype": "Actuator-Sensor",
 					"url": "mdel://56ec0b2d-34f4-45cd-adc1-909aedf0b7cc?projectID=twcloud%3A%2F98fb10b6-3535-4c6a-862c-d41b539554ab%2Fd470aa0a-ffff-4397-94ec-f7aa13610003&serverType=esiserver&projectBranch=VE&serverName=magicdraw-prod.bmwgroup.net%3A27110&projectName=Boardnet+Architecture+SP2025&elementName=Allocation+Target+%5BFunML%5D+RSE_PADI&metaType=Class&elementQName=Library%3A%3AAllocationTargets%3A%3AOnboard+ECUs%3A%3ARSE_PADI"
 				}
 			},
@@ -1496,7 +1495,7 @@
 					"domain": "Library",
 					"responsible": "",
 					"type": "allocationtargetfunml",
-					"componenttype": "Aktuator",
+					"componenttype": "Actuator",
 					"url": "mdel://c040809a-0631-48e2-a1f8-93432f9eafc1?projectID=twcloud%3A%2F98fb10b6-3535-4c6a-862c-d41b539554ab%2Fd470aa0a-ffff-4397-94ec-f7aa13610003&serverType=esiserver&projectBranch=VE&serverName=magicdraw-prod.bmwgroup.net%3A27110&projectName=Boardnet+Architecture+SP2025&elementName=Allocation+Target+%5BFunML%5D+CCE_VR&metaType=Class&elementQName=Library%3A%3AAllocationTargets%3A%3AOnboard+ECUs%3A%3ACCE_VR"
 				}
 			},
@@ -1678,7 +1677,7 @@
 					"domain": "Library",
 					"responsible": "",
 					"type": "allocationtargetfunml",
-					"componenttype": "Aktuator",
+					"componenttype": "Actuator",
 					"url": "mdel://0f7378b1-e350-427c-9c57-f7e4547d6b58?projectID=twcloud%3A%2F98fb10b6-3535-4c6a-862c-d41b539554ab%2Fd470aa0a-ffff-4397-94ec-f7aa13610003&serverType=esiserver&projectBranch=VE&serverName=magicdraw-prod.bmwgroup.net%3A27110&projectName=Boardnet+Architecture+SP2025&elementName=Allocation+Target+%5BFunML%5D+DFAL_RG_R&metaType=Class&elementQName=Library%3A%3AAllocationTargets%3A%3AOnboard+ECUs%3A%3ADFAL_RG_R"
 				}
 			},
@@ -1748,7 +1747,7 @@
 					"domain": "Library",
 					"responsible": "",
 					"type": "allocationtargetfunml",
-					"componenttype": "Aktuator",
+					"componenttype": "Actuator",
 					"url": "mdel://9cad9271-13f5-4a14-9f90-9649403f0843?projectID=twcloud%3A%2F98fb10b6-3535-4c6a-862c-d41b539554ab%2Fd470aa0a-ffff-4397-94ec-f7aa13610003&serverType=esiserver&projectBranch=VE&serverName=magicdraw-prod.bmwgroup.net%3A27110&projectName=Boardnet+Architecture+SP2025&elementName=Allocation+Target+%5BFunML%5D+DFAL_RG_L&metaType=Class&elementQName=Library%3A%3AAllocationTargets%3A%3AOnboard+ECUs%3A%3ADFAL_RG_L"
 				}
 			},
@@ -1986,7 +1985,7 @@
 					"domain": "Library",
 					"responsible": "",
 					"type": "allocationtargetfunml",
-					"componenttype": "Aktuator",
+					"componenttype": "Actuator",
 					"url": "mdel://a4f9501a-f735-466d-95f6-370cb7877d78?projectID=twcloud%3A%2F98fb10b6-3535-4c6a-862c-d41b539554ab%2Fd470aa0a-ffff-4397-94ec-f7aa13610003&serverType=esiserver&projectBranch=VE&serverName=magicdraw-prod.bmwgroup.net%3A27110&projectName=Boardnet+Architecture+SP2025&elementName=Allocation+Target+%5BFunML%5D+DLP_VL&metaType=Class&elementQName=Library%3A%3AAllocationTargets%3A%3AOnboard+ECUs%3A%3ADLP_VL"
 				}
 			},
@@ -2182,7 +2181,7 @@
 					"domain": "Library",
 					"responsible": "",
 					"type": "allocationtargetfunml",
-					"componenttype": "Aktuator",
+					"componenttype": "Actuator",
 					"url": "mdel://88492fe0-2236-41d3-9d76-5d5818d14c9b?projectID=twcloud%3A%2F98fb10b6-3535-4c6a-862c-d41b539554ab%2Fd470aa0a-ffff-4397-94ec-f7aa13610003&serverType=esiserver&projectBranch=VE&serverName=magicdraw-prod.bmwgroup.net%3A27110&projectName=Boardnet+Architecture+SP2025&elementName=Allocation+Target+%5BFunML%5D+DLP_VR&metaType=Class&elementQName=Library%3A%3AAllocationTargets%3A%3AOnboard+ECUs%3A%3ADLP_VR"
 				}
 			},
@@ -2350,7 +2349,7 @@
 					"domain": "Library",
 					"responsible": "",
 					"type": "allocationtargetfunml",
-					"componenttype": "Aktuator",
+					"componenttype": "Actuator",
 					"url": "mdel://e181d097-60d8-43bd-b504-a86ed4cfbc22?projectID=twcloud%3A%2F98fb10b6-3535-4c6a-862c-d41b539554ab%2Fd470aa0a-ffff-4397-94ec-f7aa13610003&serverType=esiserver&projectBranch=VE&serverName=magicdraw-prod.bmwgroup.net%3A27110&projectName=Boardnet+Architecture+SP2025&elementName=Allocation+Target+%5BFunML%5D+CID_FPD&metaType=Class&elementQName=Library%3A%3AAllocationTargets%3A%3AOnboard+ECUs%3A%3ACID_FPD"
 				}
 			},
@@ -2372,7 +2371,7 @@
 				"data": {
 					"id": "_19_0_4_69a0192_1618829479385_373634_499#_2021x_1_86b01fb_1654021251357_613377_446",
 					"label": "BrakeSystem (IB_BRS)",
-					"documentation": "<html>\n  <head>\n\t\t<style>\n\t\t\tp {padding:0px; margin:0px;}\n\t\t</style>\n\t</head>\n  <body>\n    <ul>\n      <li>\nIB ist f&uuml;r BEV-Fahrzeuge mit IB-ZF04\n\n      </li>\n      <li>\nIB_BRS ist f&uuml;r ICE/PHEV Fahrzeug mit IB-CT03x\n\n      </li>\n    </ul>\n    <p>\nBremsdruckanforderungen von allen Anforderern (Fahrkoordinator aus Fahrer, FAS, Fahrzeugregler, Traktionskontrolle, ...) einzelradbezogen in der Hydraulik als Bremsdruck aufbauen und &uuml;ber entsprechende Mechanik&#160;(Bremssattel, -scheiben) in den R&auml;dern als Bremskraft umsetzen.Hydraulischer/Mechanischer Anteil muss noch aufgebaut werden.\n\n    </p>\n\n    <p>\n&#160;\n\n    </p>\n\n    <p>\nDieses Cluster kann auch die Parkbremse ansteuern (anziehen/l&ouml;sen). Ist die Aktuatorik der Parkbremse Bestandteil dieses Clusters?\n\n    </p>\n\n    <p>\n&#160;\n\n    </p>\n\n    <p>\nDieses Cluster stellt logische Informationen wie (Radgeschwindigkeiten, Fahrerbremswunsch, Einzelradbremsdr&uuml;cke, ...) bereit.\n\n    </p>\n\n    <p>\n&#160;\n\n    </p>\n\n    <p>\n&#160;\n\n    </p>\n\n</body>\n</html>",
+					"documentation": "<html>\n  <head>\n\t\t<style>\n\t\t\tp {padding:0px; margin:0px;}\n\t\t</style>\n\t</head>\n  <body>\n    <ul>\n      <li>\nIB ist f&uuml;r BEV-Fahrzeuge mit IB-ZF04\n\n      </li>\n      <li>\nIB_BRS ist f&uuml;r ICE/PHEV Fahrzeug mit IB-CT03x\n\n      </li>\n    </ul>\n    <p>\nBremsdruckanforderungen von allen Anforderern (Fahrkoordinator aus Fahrer, FAS, Fahrzeugregler, Traktionskontrolle, ...) einzelradbezogen in der Hydraulik als Bremsdruck aufbauen und &uuml;ber entsprechende Mechanik&#160;(Bremssattel, -scheiben) in den R&auml;dern als Bremskraft umsetzen.Hydraulischer/Mechanischer Anteil muss noch aufgebaut werden.\n\n    </p>\n\n    <p>\n&#160;\n\n    </p>\n\n    <p>\nDieses Cluster kann auch die Parkbremse ansteuern (anziehen/l&ouml;sen). Ist die Actuatorik der Parkbremse Bestandteil dieses Clusters?\n\n    </p>\n\n    <p>\n&#160;\n\n    </p>\n\n    <p>\nDieses Cluster stellt logische Informationen wie (Radgeschwindigkeiten, Fahrerbremswunsch, Einzelradbremsdr&uuml;cke, ...) bereit.\n\n    </p>\n\n    <p>\n&#160;\n\n    </p>\n\n    <p>\n&#160;\n\n    </p>\n\n</body>\n</html>",
 					"image": "LogicalCluster.svg",
 					"maxiumASILDesign": "",
 					"domain": "Chassis",
@@ -2400,7 +2399,7 @@
 				"data": {
 					"id": "_19_0_4_69a0192_1618829479385_373634_499#_19_0_4_75f01ad_1616753812489_668888_15719",
 					"label": "BrakeSystem (IB)",
-					"documentation": "<html>\n  <head>\n\t\t<style>\n\t\t\tp {padding:0px; margin:0px;}\n\t\t</style>\n\t</head>\n  <body>\n    <ul>\n      <li>\nIB ist f&uuml;r BEV-Fahrzeuge mit IB-ZF04\n\n      </li>\n      <li>\nIB_BRS ist f&uuml;r ICE/PHEV Fahrzeug mit IB-CT03x\n\n      </li>\n    </ul>\n    <p>\nBremsdruckanforderungen von allen Anforderern (Fahrkoordinator aus Fahrer, FAS, Fahrzeugregler, Traktionskontrolle, ...) einzelradbezogen in der Hydraulik als Bremsdruck aufbauen und &uuml;ber entsprechende Mechanik&#160;(Bremssattel, -scheiben) in den R&auml;dern als Bremskraft umsetzen.Hydraulischer/Mechanischer Anteil muss noch aufgebaut werden.\n\n    </p>\n\n    <p>\n&#160;\n\n    </p>\n\n    <p>\nDieses Cluster kann auch die Parkbremse ansteuern (anziehen/l&ouml;sen). Ist die Aktuatorik der Parkbremse Bestandteil dieses Clusters?\n\n    </p>\n\n    <p>\n&#160;\n\n    </p>\n\n    <p>\nDieses Cluster stellt logische Informationen wie (Radgeschwindigkeiten, Fahrerbremswunsch, Einzelradbremsdr&uuml;cke, ...) bereit.\n\n    </p>\n\n    <p>\n&#160;\n\n    </p>\n\n    <p>\n&#160;\n\n    </p>\n\n</body>\n</html>",
+					"documentation": "<html>\n  <head>\n\t\t<style>\n\t\t\tp {padding:0px; margin:0px;}\n\t\t</style>\n\t</head>\n  <body>\n    <ul>\n      <li>\nIB ist f&uuml;r BEV-Fahrzeuge mit IB-ZF04\n\n      </li>\n      <li>\nIB_BRS ist f&uuml;r ICE/PHEV Fahrzeug mit IB-CT03x\n\n      </li>\n    </ul>\n    <p>\nBremsdruckanforderungen von allen Anforderern (Fahrkoordinator aus Fahrer, FAS, Fahrzeugregler, Traktionskontrolle, ...) einzelradbezogen in der Hydraulik als Bremsdruck aufbauen und &uuml;ber entsprechende Mechanik&#160;(Bremssattel, -scheiben) in den R&auml;dern als Bremskraft umsetzen.Hydraulischer/Mechanischer Anteil muss noch aufgebaut werden.\n\n    </p>\n\n    <p>\n&#160;\n\n    </p>\n\n    <p>\nDieses Cluster kann auch die Parkbremse ansteuern (anziehen/l&ouml;sen). Ist die Actuatorik der Parkbremse Bestandteil dieses Clusters?\n\n    </p>\n\n    <p>\n&#160;\n\n    </p>\n\n    <p>\nDieses Cluster stellt logische Informationen wie (Radgeschwindigkeiten, Fahrerbremswunsch, Einzelradbremsdr&uuml;cke, ...) bereit.\n\n    </p>\n\n    <p>\n&#160;\n\n    </p>\n\n    <p>\n&#160;\n\n    </p>\n\n</body>\n</html>",
 					"image": "LogicalCluster.svg",
 					"maxiumASILDesign": "",
 					"domain": "Chassis",
@@ -2588,7 +2587,7 @@
 					"domain": "Library",
 					"responsible": "",
 					"type": "allocationtargetfunml",
-					"componenttype": "Aktuator",
+					"componenttype": "Actuator",
 					"url": "mdel://9b7ddb11-2abd-4086-aa4a-4c6f485c6a46?projectID=twcloud%3A%2F98fb10b6-3535-4c6a-862c-d41b539554ab%2Fd470aa0a-ffff-4397-94ec-f7aa13610003&serverType=esiserver&projectBranch=VE&serverName=magicdraw-prod.bmwgroup.net%3A27110&projectName=Boardnet+Architecture+SP2025&elementName=Allocation+Target+%5BFunML%5D+DFAL_DA_L&metaType=Class&elementQName=Library%3A%3AAllocationTargets%3A%3AOnboard+ECUs%3A%3ADFAL_DA_L"
 				}
 			},
@@ -2840,7 +2839,7 @@
 					"domain": "Library",
 					"responsible": "",
 					"type": "allocationtargetfunml",
-					"componenttype": "Aktuator",
+					"componenttype": "Actuator",
 					"url": "mdel://b9bd7696-c4f1-45a2-836f-197ea269185a?projectID=twcloud%3A%2F98fb10b6-3535-4c6a-862c-d41b539554ab%2Fd470aa0a-ffff-4397-94ec-f7aa13610003&serverType=esiserver&projectBranch=VE&serverName=magicdraw-prod.bmwgroup.net%3A27110&projectName=Boardnet+Architecture+SP2025&elementName=Allocation+Target+%5BFunML%5D+TEE4&metaType=Class&elementQName=Library%3A%3AAllocationTargets%3A%3AOnboard+ECUs%3A%3ATEE4"
 				}
 			},
@@ -3008,7 +3007,7 @@
 					"domain": "Library",
 					"responsible": "",
 					"type": "allocationtargetfunml",
-					"componenttype": "Aktuator",
+					"componenttype": "Actuator",
 					"url": "mdel://09079f5e-7a49-4b2f-98c3-6799747436c3?projectID=twcloud%3A%2F98fb10b6-3535-4c6a-862c-d41b539554ab%2Fd470aa0a-ffff-4397-94ec-f7aa13610003&serverType=esiserver&projectBranch=VE&serverName=magicdraw-prod.bmwgroup.net%3A27110&projectName=Boardnet+Architecture+SP2025&elementName=Allocation+Target+%5BFunML%5D+TEE3&metaType=Class&elementQName=Library%3A%3AAllocationTargets%3A%3AOnboard+ECUs%3A%3ATEE3"
 				}
 			},
@@ -3288,7 +3287,7 @@
 					"domain": "Library",
 					"responsible": "",
 					"type": "allocationtargetfunml",
-					"componenttype": "Aktuator",
+					"componenttype": "Actuator",
 					"url": "mdel://90fbd278-e3e6-4f3b-a96a-3db947c428ab?projectID=twcloud%3A%2F98fb10b6-3535-4c6a-862c-d41b539554ab%2Fd470aa0a-ffff-4397-94ec-f7aa13610003&serverType=esiserver&projectBranch=VE&serverName=magicdraw-prod.bmwgroup.net%3A27110&projectName=Boardnet+Architecture+SP2025&elementName=Allocation+Target+%5BFunML%5D+CCE_HR2&metaType=Class&elementQName=Library%3A%3AAllocationTargets%3A%3AOnboard+ECUs%3A%3ACCE_HR2"
 				}
 			},
