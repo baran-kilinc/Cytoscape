@@ -44,6 +44,11 @@ function applyCustomLayoutForAllocationTargets(cy) {
 
 
 
+
+
+
+
+
   
   // --- Parentleri yana yana hizala (Zusammenbau/ECU) ---
 // --- Parentleri yana yana hizala (Zusammenbau/ECU) ---
@@ -105,7 +110,13 @@ if (targetParents.length > 0) {
 
 
 
-// --- SENSOR PARENTLERİ VE CHILD'LARI DİNAMİK DİKEY SIRALA (Actuator'in tersi yönde ve referans sabit) ---
+
+
+
+
+
+
+// --- SENSOR PARENTLERİ VE CHILD'LARI GRID-BENZERİ DİZİLİŞ (EN ÇOK CHILDA SAHİP OLAN EN ÜSTTE, ÇAKIŞMASIZ) ---
 
 // Bu flag sadece ilk çalıştırmada true olacak, sonra false olacak
 if (typeof window.firstSensorLayoutRun === "undefined") {
@@ -114,59 +125,146 @@ if (typeof window.firstSensorLayoutRun === "undefined") {
 
 const sensorParents = parentNodes.filter(parent => parent.data('componenttype') === "Sensor");
 if (sensorParents.length > 0) {
-  const referenceY = 0;
-  const avgSensorX =
-    sensorParents.map(p => p.position('x')).reduce((sum, x) => sum + x, 0) / sensorParents.length;
-
-  const sensorBlocks = sensorParents.map(parent => {
-    const parentSize = getNodeSize(parent);
-    const childNodes = getChildNodesOfParent(parent.id());
-    let blockHeight = 0;
-    let firstChild = true;
-    if (childNodes.length > 0) {
-      blockHeight += CHILD_SIDE_PADDING_SENSOR;
-      childNodes.forEach(n => {
-        const size = getNodeSize(n);
-        if (!firstChild) blockHeight += VERTICAL_CHILD_PADDING;
-        blockHeight += size.height;
-        blockHeight += CHILD_SIDE_PADDING_SENSOR;
-        firstChild = false;
-      });
-      blockHeight += parentSize.height;
-    } else {
-      blockHeight += parentSize.height + 2 * CHILD_SIDE_PADDING_SENSOR;
-    }
-    return { parent, blockHeight, parentSize, childNodes };
+  // Sıralama: En çok child'a sahip olan parent en üstte olacak şekilde sırala
+  const sortedSensorParents = sensorParents.sort((a, b) => {
+    const aChildren = getChildNodesOfParent(a.id()).length;
+    const bChildren = getChildNodesOfParent(b.id()).length;
+    return bChildren - aChildren;
   });
 
-  const totalSensorHeight = sensorBlocks.reduce((sum, b) => sum + b.blockHeight, 0);
+  // Grid için başlama noktası ve parametreler
+  const START_X = -20000; // Grid'in sol başı
+  const PARENTS_PER_ROW = 2; // Maksimum 2 parent yan yana
+  const PARENT_HORIZONTAL_GAP = 800; // Parentlar arası yatay mesafe
+  const PARENT_VERTICAL_GAP = 400; // Satırlar arası mesafe
+  const CHILD_GRID_MAX_COLS = 4; // Child gridinde en fazla 4 sütun
+  // Child paddingler yukarıdan geliyor: CHILD_PADDING, VERTICAL_CHILD_PADDING, CHILD_SIDE_PADDING_SENSOR
 
-  let startY = referenceY;
+  // Parent'ların grid yerleşimini hazırla
+  let currentRow = 0;
+  let currentCol = 0;
+  let maxRowHeight = 0; // Her row'daki en yüksek parent + en yüksek child grid yüksekliği
 
-  sensorBlocks.forEach(({ parent, blockHeight, parentSize, childNodes }) => {
-    const parentY = startY + parentSize.height / 2;
+  // Parent ve child'ların konumlarını önceden hesaplayıp çakışmayı önleyecek şekilde ayarlayalım
+  // Her parent'ın yerleşeceği x,y
+  const parentPlacements = [];
+
+  // Önce tüm parent ve child grid'lerinin boyutlarını hesaplayalım
+  const parentBlockGeometries = sortedSensorParents.map(parent => {
+    const parentSize = getNodeSize(parent);
+    const childNodes = getChildNodesOfParent(parent.id());
+    // Child grid boyutu
+    const childCount = childNodes.length;
+    const cols = Math.min(CHILD_GRID_MAX_COLS, childCount > 0 ? childCount : 1);
+    const rows = childCount > 0 ? Math.ceil(childCount / cols) : 0;
+
+    // Her child'ın width/height değerlerini topla, gridde max genişlik/satır yüksekliği bul
+    let maxChildWidth = 0;
+    let maxChildHeight = 0;
+    childNodes.forEach(n => {
+      const size = getNodeSize(n);
+      if (size.width > maxChildWidth) maxChildWidth = size.width;
+      if (size.height > maxChildHeight) maxChildHeight = size.height;
+    });
+
+    // Grid'in toplam genişliği/height'ı (aralara padding de eklenecek)
+    const gridWidth = cols * maxChildWidth + (cols - 1) * CHILD_PADDING;
+    const gridHeight = rows * maxChildHeight + (rows - 1) * VERTICAL_CHILD_PADDING;
+
+    // Parent'ın altına grid koyulacaksa toplam yükseklik
+    // Parent üstte, altında CHILD_SIDE_PADDING_SENSOR, sonra child grid
+    const totalBlockHeight = parentSize.height / 2 + CHILD_SIDE_PADDING_SENSOR + gridHeight + maxChildHeight / 2;
+    // Parent'ın ortalanacağı genişlik
+    const totalBlockWidth = Math.max(parentSize.width, gridWidth);
+
+    return {
+      parent,
+      parentSize,
+      childNodes,
+      childCount,
+      gridCols: cols,
+      gridRows: rows,
+      maxChildWidth,
+      maxChildHeight,
+      gridWidth,
+      gridHeight,
+      totalBlockWidth,
+      totalBlockHeight
+    };
+  });
+
+  // Parent'ları satır satır yerleştir
+  let layoutY = 0;
+  let rowParents = [];
+  let rowMaxHeight = 0;
+
+  for (let i = 0; i < parentBlockGeometries.length; i++) {
+    const block = parentBlockGeometries[i];
+
+    // Satır başıysa
+    if (rowParents.length === 0) {
+      rowMaxHeight = block.parentSize.height + CHILD_SIDE_PADDING_SENSOR + block.gridHeight;
+    } else {
+      // Satırda max yükseklik tutulsun
+      if (block.parentSize.height + CHILD_SIDE_PADDING_SENSOR + block.gridHeight > rowMaxHeight) {
+        rowMaxHeight = block.parentSize.height + CHILD_SIDE_PADDING_SENSOR + block.gridHeight;
+      }
+    }
+
+    // Parent'ın x pozisyonu
+    const parentX = START_X + (rowParents.length) * (block.totalBlockWidth + PARENT_HORIZONTAL_GAP);
+    // Parent'ın y pozisyonu (her satırda yukarıdan aşağıya)
+    const parentY = layoutY + block.parentSize.height / 2;
+
+    parentPlacements.push({
+      parent: block.parent,
+      parentX,
+      parentY,
+      block
+    });
+
+    rowParents.push(block);
+
+    // Satır dolduysa veya son parent ise, bir sonraki satıra geç
+    if (rowParents.length === PARENTS_PER_ROW || i === parentBlockGeometries.length - 1) {
+      layoutY += rowMaxHeight + PARENT_VERTICAL_GAP;
+      rowParents = [];
+      rowMaxHeight = 0;
+    }
+  }
+
+  // Parent ve child'ları konumlandır
+  parentPlacements.forEach(({ parent, parentX, parentY, block }) => {
+    // 1. Parent node pozisyonu
     parent.position({
-      x: 0,
+      x: parentX + block.totalBlockWidth / 2,
       y: parentY
     });
 
-    if (childNodes.length > 0) {
-      let currY = parentY + parentSize.height / 2 + CHILD_SIDE_PADDING_SENSOR;
-      let childX = avgSensorX - 500;
-      childNodes.forEach((n, i) => {
-        const size = getNodeSize(n);
-        if (i > 0) currY += VERTICAL_CHILD_PADDING;
+    // 2. Child grid pozisyonları
+    if (block.childCount > 0) {
+      // Gridin sol üst köşe (parent'ın altına ortalanmış)
+      const gridStartX = parentX + (block.totalBlockWidth - block.gridWidth) / 2;
+      const gridStartY = parentY + block.parentSize.height / 2 + CHILD_SIDE_PADDING_SENSOR;
+      for (let idx = 0; idx < block.childNodes.length; idx++) {
+        const col = idx % block.gridCols;
+        const row = Math.floor(idx / block.gridCols);
+        const child = block.childNodes[idx];
+        // Child'ın tam boyutunu öğren
+        const csize = getNodeSize(child);
+        // X: kolonun başı + ortalanmış child
+        const cx = gridStartX + col * (block.maxChildWidth + CHILD_PADDING) + block.maxChildWidth / 2;
+        // Y: satırın başı + ortalanmış child
+        const cy = gridStartY + row * (block.maxChildHeight + VERTICAL_CHILD_PADDING) + block.maxChildHeight / 2;
 
         // SADECE İLK ÇALIŞTIRMADA X DEĞERİNİ 0'A ÇEK
         if (window.firstSensorLayoutRun) {
-          n.position({ x: 0, y: currY + size.height / 2 - 175 });
+          child.position({ x: 0, y: cy });
         } else {
-          n.position({ x: childX - size.width / 2, y: currY + size.height / 2 - 175 });
+          child.position({ x: cx, y: cy });
         }
-        currY += size.height + CHILD_SIDE_PADDING_SENSOR;
-      });
+      }
     }
-    startY += blockHeight;
   });
 
   // Artık ilk çalıştırma yapıldı, tekrar x=0 yapılmasın
@@ -178,7 +276,17 @@ if (sensorParents.length > 0) {
 
 
 
-// --- ACTUATOR PARENTLERİ VE CHILD'LARI DİNAMİK DİKEY SIRALA (Sensor ile aynı mantık, referans sabit) ---
+
+
+
+
+
+
+
+
+
+
+// --- ACTUATOR PARENTLERİ VE CHILD'LARI GRID-BENZERİ DİZİLİŞ (EN ÇOK CHILDA SAHİP OLAN EN ÜSTTE, ÇAKIŞMASIZ) ---
 
 // Sadece ilk çalıştırmada true olacak bir flag
 if (typeof window.firstActuatorLayoutRun === "undefined") {
@@ -187,60 +295,145 @@ if (typeof window.firstActuatorLayoutRun === "undefined") {
 
 const actuatorParents = parentNodes.filter(parent => parent.data('componenttype') === "Actuator");
 if (actuatorParents.length > 0) {
-  const referenceY = 0;
-  const avgActuatorX =
-    actuatorParents.map(p => p.position('x')).reduce((sum, x) => sum + x, 0) / actuatorParents.length;
-
-  const actuatorBlocks = actuatorParents.map(parent => {
-    const parentSize = getNodeSize(parent);
-    const childNodes = getChildNodesOfParent(parent.id());
-    let blockHeight = 0;
-    let firstChild = true;
-    if (childNodes.length > 0) {
-      blockHeight += CHILD_SIDE_PADDING_ACTUATOR;
-      childNodes.forEach(n => {
-        const size = getNodeSize(n);
-        if (!firstChild) blockHeight += VERTICAL_CHILD_PADDING;
-        blockHeight += size.height;
-        blockHeight += CHILD_SIDE_PADDING_ACTUATOR;
-        firstChild = false;
-      });
-      blockHeight += parentSize.height;
-    } else {
-      blockHeight += parentSize.height + 2 * CHILD_SIDE_PADDING_ACTUATOR;
-    }
-    return { parent, blockHeight, parentSize, childNodes };
+  // Sıralama: En çok child'a sahip olan parent en üstte olacak şekilde sırala
+  const sortedActuatorParents = actuatorParents.sort((a, b) => {
+    const aChildren = getChildNodesOfParent(a.id()).length;
+    const bChildren = getChildNodesOfParent(b.id()).length;
+    return bChildren - aChildren;
   });
 
-  const totalActuatorHeight =
-    actuatorBlocks.reduce((sum, b) => sum + b.blockHeight, 0);
+  // Grid için başlama noktası ve parametreler
+  const START_X = +20000; // Grid'in sağ başı
+  const PARENTS_PER_ROW = 2; // Maksimum 2 parent yan yana
+  const PARENT_HORIZONTAL_GAP = 800; // Parentlar arası yatay mesafe
+  const PARENT_VERTICAL_GAP = 400; // Satırlar arası mesafe
+  const CHILD_GRID_MAX_COLS = 4; // Child gridinde en fazla 4 sütun
+  // Child paddingler yukarıdan geliyor: CHILD_PADDING, VERTICAL_CHILD_PADDING, CHILD_SIDE_PADDING_ACTUATOR
 
-  let startY = referenceY;
+  // Parent'ların grid yerleşimini önceden hesaplayalım
+  let currentRow = 0;
+  let currentCol = 0;
+  let maxRowHeight = 0; // Her row'daki en yüksek parent + en yüksek child grid yüksekliği
 
-  actuatorBlocks.forEach(({ parent, blockHeight, parentSize, childNodes }) => {
-    const parentY = startY + parentSize.height / 2;
+  // Her parent'ın yerleşeceği x,y
+  const parentPlacements = [];
+
+  // Önce tüm parent ve child grid'lerinin boyutlarını hesaplayalım
+  const parentBlockGeometries = sortedActuatorParents.map(parent => {
+    const parentSize = getNodeSize(parent);
+    const childNodes = getChildNodesOfParent(parent.id());
+    // Child grid boyutu
+    const childCount = childNodes.length;
+    const cols = Math.min(CHILD_GRID_MAX_COLS, childCount > 0 ? childCount : 1);
+    const rows = childCount > 0 ? Math.ceil(childCount / cols) : 0;
+
+    // Her child'ın width/height değerlerini topla, gridde max genişlik/satır yüksekliği bul
+    let maxChildWidth = 0;
+    let maxChildHeight = 0;
+    childNodes.forEach(n => {
+      const size = getNodeSize(n);
+      if (size.width > maxChildWidth) maxChildWidth = size.width;
+      if (size.height > maxChildHeight) maxChildHeight = size.height;
+    });
+
+    // Grid'in toplam genişliği/height'ı (aralara padding de eklenecek)
+    const gridWidth = cols * maxChildWidth + (cols - 1) * CHILD_PADDING;
+    const gridHeight = rows * maxChildHeight + (rows - 1) * VERTICAL_CHILD_PADDING;
+
+    // Parent'ın altına grid koyulacaksa toplam yükseklik
+    // Parent üstte, altında CHILD_SIDE_PADDING_ACTUATOR, sonra child grid
+    const totalBlockHeight = parentSize.height / 2 + CHILD_SIDE_PADDING_ACTUATOR + gridHeight + maxChildHeight / 2;
+    // Parent'ın ortalanacağı genişlik
+    const totalBlockWidth = Math.max(parentSize.width, gridWidth);
+
+    return {
+      parent,
+      parentSize,
+      childNodes,
+      childCount,
+      gridCols: cols,
+      gridRows: rows,
+      maxChildWidth,
+      maxChildHeight,
+      gridWidth,
+      gridHeight,
+      totalBlockWidth,
+      totalBlockHeight
+    };
+  });
+
+  // Parent'ları satır satır yerleştir
+  let layoutY = 0;
+  let rowParents = [];
+  let rowMaxHeight = 0;
+
+  for (let i = 0; i < parentBlockGeometries.length; i++) {
+    const block = parentBlockGeometries[i];
+
+    // Satır başıysa
+    if (rowParents.length === 0) {
+      rowMaxHeight = block.parentSize.height + CHILD_SIDE_PADDING_ACTUATOR + block.gridHeight;
+    } else {
+      // Satırda max yükseklik tutulsun
+      if (block.parentSize.height + CHILD_SIDE_PADDING_ACTUATOR + block.gridHeight > rowMaxHeight) {
+        rowMaxHeight = block.parentSize.height + CHILD_SIDE_PADDING_ACTUATOR + block.gridHeight;
+      }
+    }
+
+    // Parent'ın x pozisyonu
+    const parentX = START_X + (rowParents.length) * (block.totalBlockWidth + PARENT_HORIZONTAL_GAP);
+    // Parent'ın y pozisyonu (her satırda yukarıdan aşağıya)
+    const parentY = layoutY + block.parentSize.height / 2;
+
+    parentPlacements.push({
+      parent: block.parent,
+      parentX,
+      parentY,
+      block
+    });
+
+    rowParents.push(block);
+
+    // Satır dolduysa veya son parent ise, bir sonraki satıra geç
+    if (rowParents.length === PARENTS_PER_ROW || i === parentBlockGeometries.length - 1) {
+      layoutY += rowMaxHeight + PARENT_VERTICAL_GAP;
+      rowParents = [];
+      rowMaxHeight = 0;
+    }
+  }
+
+  // Parent ve child'ları konumlandır
+  parentPlacements.forEach(({ parent, parentX, parentY, block }) => {
+    // 1. Parent node pozisyonu
     parent.position({
-      x: 0,
+      x: parentX + block.totalBlockWidth / 2,
       y: parentY
     });
 
-    if (childNodes.length > 0) {
-      let currY = parentY + parentSize.height / 2 + CHILD_SIDE_PADDING_ACTUATOR;
-      let childX = avgActuatorX + 200;
-      childNodes.forEach((n, i) => {
-        const size = getNodeSize(n);
-        if (i > 0) currY += VERTICAL_CHILD_PADDING;
+    // 2. Child grid pozisyonları
+    if (block.childCount > 0) {
+      // Gridin sol üst köşe (parent'ın altına ortalanmış)
+      const gridStartX = parentX + (block.totalBlockWidth - block.gridWidth) / 2;
+      const gridStartY = parentY + block.parentSize.height / 2 + CHILD_SIDE_PADDING_ACTUATOR;
+      for (let idx = 0; idx < block.childNodes.length; idx++) {
+        const col = idx % block.gridCols;
+        const row = Math.floor(idx / block.gridCols);
+        const child = block.childNodes[idx];
+        // Child'ın tam boyutunu öğren
+        const csize = getNodeSize(child);
+        // X: kolonun başı + ortalanmış child
+        const cx = gridStartX + col * (block.maxChildWidth + CHILD_PADDING) + block.maxChildWidth / 2;
+        // Y: satırın başı + ortalanmış child
+        const cy = gridStartY + row * (block.maxChildHeight + VERTICAL_CHILD_PADDING) + block.maxChildHeight / 2;
 
         // SADECE İLK ÇALIŞTIRMADA X DEĞERİNİ 0'A ÇEK
         if (window.firstActuatorLayoutRun) {
-          n.position({ x: 0, y: currY + size.height / 2 - 175 });
+          child.position({ x: 0, y: cy });
         } else {
-          n.position({ x: childX + size.width / 2, y: currY + size.height / 2 - 175 });
+          child.position({ x: cx, y: cy });
         }
-        currY += size.height + CHILD_SIDE_PADDING_ACTUATOR;
-      });
+      }
     }
-    startY += blockHeight;
   });
 
   // İlk çalıştırmadan sonra flag'i false yap
@@ -397,4 +590,3 @@ if (unlocalisedNodes.length > 0) {
   });
 }
 }
-
