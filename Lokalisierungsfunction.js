@@ -1,4 +1,3 @@
-
 // ---- YENİ CUSTOM LAYOUT ALGORITHM (çakışmasız ve ortalanmış) ----
 function applyCustomLayoutForAllocationTargets(cy) {
   // CHILD_PADDING ve VERTICAL_CHILD_PADDING iki katına çıkarıldı!
@@ -50,62 +49,142 @@ function applyCustomLayoutForAllocationTargets(cy) {
 
 
   
-  // --- Parentleri yana yana hizala (Zusammenbau/ECU) ---
-// --- Parentleri yana yana hizala (Zusammenbau/ECU) ---
+// --- Parentleri sensorParents algoritması ile hizala (Zusammenbau/ECU) ---
+// START_X varyansı x = -2000'den başlayacak
+// --- TARGET PARENTLERİ VE CHILD'LARI GRID-BENZERİ DİZİLİŞ (EN ÇOK CHILDA SAHİP OLAN EN ÜSTTE, ÇAKIŞMASIZ) ---
+
+if (typeof window.firstTargetLayoutRun === "undefined") {
+  window.firstTargetLayoutRun = true;
+}
+
 const targetParents = parentNodes.filter(parent => {
   const type = parent.data('componenttype');
   return type === "ECU" || type === "Zusammenbau";
 });
-
 if (targetParents.length > 0) {
-  function getParentTotalWidth(parent) {
+  // Sıralama: En çok child'a sahip olan parent en üstte olacak şekilde sırala
+  const sortedTargetParents = targetParents.sort((a, b) => {
+    const aChildren = getChildNodesOfParent(a.id()).length;
+    const bChildren = getChildNodesOfParent(b.id()).length;
+    return bChildren - aChildren;
+  });
+
+  // Grid için başlama noktası ve parametreler
+  const START_X = -2000; // Grid'in sol başı
+  const PARENTS_PER_ROW = 2; // Maksimum 2 parent yan yana
+  const PARENT_HORIZONTAL_GAP = 800; // Parentlar arası yatay mesafe
+  const PARENT_VERTICAL_GAP = 400; // Satırlar arası mesafe
+  const CHILD_GRID_MAX_COLS = 4; // Child gridinde en fazla 4 sütun
+
+  // Parent'ların grid yerleşimini hazırla
+  let rowParents = [];
+  let layoutY = 0;
+  let rowMaxHeight = 0;
+
+  // Önce tüm parent ve child grid'lerinin boyutlarını hesaplayalım
+  const parentBlockGeometries = sortedTargetParents.map(parent => {
+    const parentSize = getNodeSize(parent);
     const childNodes = getChildNodesOfParent(parent.id());
-    if (childNodes.length === 0) {
-      // Sadece parent'ın kendi label genişliği
-      const size = getNodeSize(parent);
-      return size.width;
+    const childCount = childNodes.length;
+    const cols = Math.min(CHILD_GRID_MAX_COLS, childCount > 0 ? childCount : 1);
+    const rows = childCount > 0 ? Math.ceil(childCount / cols) : 0;
+
+    let maxChildWidth = 0;
+    let maxChildHeight = 0;
+    childNodes.forEach(n => {
+      const size = getNodeSize(n);
+      if (size.width > maxChildWidth) maxChildWidth = size.width;
+      if (size.height > maxChildHeight) maxChildHeight = size.height;
+    });
+
+    const gridWidth = cols * maxChildWidth + (cols - 1) * CHILD_PADDING;
+    const gridHeight = rows * maxChildHeight + (rows - 1) * VERTICAL_CHILD_PADDING;
+
+    const totalBlockHeight = parentSize.height / 2 + CHILD_SIDE_PADDING + gridHeight + maxChildHeight / 2;
+    const totalBlockWidth = Math.max(parentSize.width, gridWidth);
+
+    return {
+      parent,
+      parentSize,
+      childNodes,
+      childCount,
+      gridCols: cols,
+      gridRows: rows,
+      maxChildWidth,
+      maxChildHeight,
+      gridWidth,
+      gridHeight,
+      totalBlockWidth,
+      totalBlockHeight
+    };
+  });
+
+  // Parent ve child'ların konumlarını önceden hesaplayıp çakışmayı önleyecek şekilde ayarlayalım
+  const parentPlacements = [];
+
+  for (let i = 0; i < parentBlockGeometries.length; i++) {
+    const block = parentBlockGeometries[i];
+
+    if (rowParents.length === 0) {
+      rowMaxHeight = block.parentSize.height + CHILD_SIDE_PADDING + block.gridHeight;
+    } else {
+      if (block.parentSize.height + CHILD_SIDE_PADDING + block.gridHeight > rowMaxHeight) {
+        rowMaxHeight = block.parentSize.height + CHILD_SIDE_PADDING + block.gridHeight;
+      }
     }
 
-    // Child'ların toplam genişliği + kenarlardan padding
-    let childWidth = childNodes.reduce((sum, n, i) => {
-      const size = getNodeSize(n);
-      return sum + size.width + (i > 0 ? CHILD_PADDING : 0);
-    }, 0);
-    childWidth += 2 * CHILD_SIDE_PADDING; // Sağ ve sol kenar padding
+    const parentX = START_X + (rowParents.length) * (block.totalBlockWidth + PARENT_HORIZONTAL_GAP);
+    const parentY = layoutY + block.parentSize.height / 2;
 
-    // Parent'ın kendi label'ı child'ların toplamından genişse, onu al
-    const parentLabelWidth = getNodeSize(parent).width;
-    return Math.max(childWidth, parentLabelWidth);
-  }
-
-  // Parent'ların merkezini belirle
-  const avgY =
-    targetParents.map(p => p.position('y')).reduce((sum, y) => sum + y, 0) / targetParents.length;
-
-  // Parent'ların toplam genişliği ve aradaki dinamik boşlukları hesapla
-  let totalWidth = 0;
-  const parentWidths = [];
-  for (let i = 0; i < targetParents.length; i++) {
-    const width = getParentTotalWidth(targetParents[i]);
-    parentWidths.push(width);
-    totalWidth += width;
-    if (i > 0) totalWidth += CHILD_PADDING; // Parent'lar arası boşluk
-  }
-
-  // Ortala: grubun genişliğinin yarısı kadar negatiften başla, orta nokta x=0 olacak şekilde
-  let startX = -totalWidth / 2;
-
-  // Parent'ların pozisyonunu güncelle
-  targetParents.forEach((parent, i) => {
-    const width = parentWidths[i];
-    parent.position({
-      x: startX + width / 2,
-      y: avgY
+    parentPlacements.push({
+      parent: block.parent,
+      parentX,
+      parentY,
+      block
     });
-    startX += width + CHILD_PADDING;
-  });
-}
 
+    rowParents.push(block);
+
+    if (rowParents.length === PARENTS_PER_ROW || i === parentBlockGeometries.length - 1) {
+      layoutY += rowMaxHeight + PARENT_VERTICAL_GAP;
+      rowParents = [];
+      rowMaxHeight = 0;
+    }
+  }
+
+  // Parent ve child'ları konumlandır
+  parentPlacements.forEach(({ parent, parentX, parentY, block }) => {
+    // 1. Parent node pozisyonu
+    parent.position({
+      x: parentX + block.totalBlockWidth / 2,
+      y: parentY
+    });
+
+    // 2. Child grid pozisyonları
+    if (block.childCount > 0) {
+      const gridStartX = parentX + (block.totalBlockWidth - block.gridWidth) / 2;
+      const gridStartY = parentY + block.parentSize.height / 2 + CHILD_SIDE_PADDING;
+      for (let idx = 0; idx < block.childNodes.length; idx++) {
+        const col = idx % block.gridCols;
+        const row = Math.floor(idx / block.gridCols);
+        const child = block.childNodes[idx];
+        const csize = getNodeSize(child);
+        const cx = gridStartX + col * (block.maxChildWidth + CHILD_PADDING) + block.maxChildWidth / 2;
+        const cy = gridStartY + row * (block.maxChildHeight + VERTICAL_CHILD_PADDING) + block.maxChildHeight / 2;
+
+        // SADECE İLK ÇALIŞTIRMADA X DEĞERİNİ 0'A ÇEK
+        if (window.firstTargetLayoutRun) {
+          child.position({ x: 0, y: cy });
+        } else {
+          child.position({ x: cx, y: cy });
+        }
+      }
+    }
+  });
+
+  // Artık ilk çalıştırma yapıldı, tekrar x=0 yapılmasın
+  window.firstTargetLayoutRun = false;
+}
 
 
 
@@ -590,3 +669,4 @@ if (unlocalisedNodes.length > 0) {
   });
 }
 }
+
