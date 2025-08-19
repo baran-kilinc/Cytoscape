@@ -51,264 +51,263 @@ function applyCustomLayoutForAllocationTargets(cy) {
 
 
   
-/**
- * ECU & Zusammenbau özel layout fonksiyonu
- *
- * Sağlanan kurallar:
- *  - Parent'lar (yalnızca componenttype: ECU veya Zusammenbau):
- *      * Child sayısına göre (çok -> az) yukarıdan aşağıya sıralanır.
- *      * 7 veya daha fazla child varsa parent tek başına bir satır kaplar.
- *      * 6 veya daha az child varsa iki parent aynı satırı paylaşabilir (kalan tek kalırsa tek satır alır).
- *      * Satırlar x=0 etrafında ortalanır.
- *
- *  - Child grid (parent altındaki dizilim):
- *      1  => 1
- *      2  => 2
- *      3  => 3
- *      4  => 2-2
- *      5  => 3-2 (listede yoktu, varsayılan. İstersen 2-3 yapabilirsin)
- *      6  => 2-2-2
- *      7  => 4-3
- *      8  => 4-4
- *      9  => 4-4-1
- *      10 => 4-4-2
- *      11 => 4-4-3
- *      12 => 4-4-4
- *      13 => 4-4-4-1
- *      14 => 4-4-4-2
- *      15 => 4-4-4-3
- *      16 => 4-4-4-4
- *      17 => 4-4-4-4-1
- *      18 => 4-4-4-4-2
- *      19 => 4-4-4-4-3
- *      20 => 4-4-4-4-4
- *      >20 => 4-4-4-...-kalan (4'erli satırlar + kalan)
- *
- *  - Çocuk satırları arası dikey boşluk, yatay spacing ayarlanır.
- *  - Parent üstü ile ilk child satırı arası offset: 300px
- *
- * Varsayımlar:
- *  - Global yardımcılar mevcut:
- *      getChildNodesOfParent(parentId) => array / collection
- *      getNodeSize(node) => { width, height }
- *      parentNodes => ECU, Sensor vb. parent node'ları içeren collection
- *      cy => Cytoscape instance
- *
- * Önemli:
- *  - Başka bir script bu fonksiyondan sonra position() çağırıp üzerine yazıyorsa grid bozulur.
- *  - Bu fonksiyon yalnızca ECU ve Zusammenbau için çalışır; Sensor / Actuator vb. dokunmaz.
- */
-
- (function layoutECUAndZusammenbau() {
-  // --- KONFİG ---
+// --- YENİ: Sadece "Zusammenbau / ECU" parent grubunu lokalize et (dikey sıralı, parent x=0 ortalanmış) ---
+// İSTEK ÖZETİ:
+//  - Sadece ECU ve Zusammenbau parent'ları işlenecek
+//  - Parent'lar child sayısına göre (çok -> az) yukarıdan aşağıya sıralanacak
+//  - Her parent için mevcut child düzeni (aralarındaki mesafeler, konum farkları) KORUNACAK
+//  - Parent merkezinin x'i 0 yapılacak (parent x=0'a ortalanacak)
+//  - Child'lar parent'a göre relatif konumlarını koruyacak (yani grup hep birlikte yatayda parent ile beraber kayacak)
+//  - Dikeyde gruplar alt alta yerleştirilecek; grup yüksekliği parent + child'ların kapsadığı yükseklikle belirlenir
+//  - Her parent için genişlik (parent ve child'ların kapsadığı toplam genişlik) hesaplanıp data'ya yazılır (isteğe bağlı kullanılabilir)
+(function localizeAndPlaceUnlocalisedNodes() {
+  // --- Padding ve boşluk parametreleri ---
   const TARGET_TYPES = new Set(["ECU", "Zusammenbau"]);
-  const CENTER_X = 0;
+  const VERTICAL_GROUP_GAP = 400;
+  const CHILD_PADDING = 450; // Child node'lar arası boşluk (düzen kuralı: actuator grid gibi)
+  const CHILD_SIDE_PADDING = 150;
+  const VERTICAL_CHILD_PADDING = 50; // Sensor/Actuator child arası dikey
+  const ECU_CHILD_OFFSET_Y = 300; // ECU/Zusammenbau'nun child'ı parent'in altına ne kadar uzakta
+  const ECU_CHILD_OFFSET_X = 200; // Child'ların sağa kaydırılması (orada da uygulanıyor)
 
-  // Parent satırları arası dikey boşluk (bir satırın en alt child'ından sonraki satır parent üstüne kadar)
-  const ROW_VERTICAL_GAP = 400;
-
-  // Aynı satırda iki küçük parent arası yatay boşluk
-  const SMALL_PARENT_HORIZONTAL_GAP = 600;
-
-  // Child grid parametreleri
-  const CHILD_FIRST_ROW_OFFSET = 300;   // Parent alt kenarından ilk child satırının üstüne kadar
-  const CHILD_ROW_V_GAP = 50;           // Child satırları arası dikey boşluk
-  const CHILD_COL_H_GAP = 450;          // Aynı satırdaki child kutuları arası yatay boşluk
-
-  // --- Yardımcı: Child row pattern tablosu ---
-  const PATTERN_MAP = {
-    1: [1],
-    2: [2],
-    3: [3],
-    4: [2, 2],
-    5: [3, 2],          // Belirtilmediği için varsayılan
-    6: [2, 2, 2],
-    7: [4, 3],
-    8: [4, 4],
-    9: [4, 4, 1],
-    10: [4, 4, 2],
-    11: [4, 4, 3],
-    12: [4, 4, 4],
-    13: [4, 4, 4, 1],
-    14: [4, 4, 4, 2],
-    15: [4, 4, 4, 3],
-    16: [4, 4, 4, 4],
-    17: [4, 4, 4, 4, 1],
-    18: [4, 4, 4, 4, 2],
-    19: [4, 4, 4, 4, 3],
-    20: [4, 4, 4, 4, 4]
-  };
-
-  function getChildRowPattern(count) {
-    if (PATTERN_MAP[count]) return PATTERN_MAP[count].slice();
-    // 20'den büyük -> 4'lü satırlar + kalan
-    const pattern = [];
-    let remaining = count;
-    while (remaining > 4) {
-      pattern.push(4);
-      remaining -= 4;
-    }
-    if (remaining > 0) pattern.push(remaining);
-    return pattern;
-  }
-
-  // --- Hedef parent'ları al ---
+  // --- ECU & Zusammenbau gruplarını hizala ---
   const targetParents = parentNodes.filter(p => TARGET_TYPES.has(p.data('componenttype')));
-  if (!targetParents || targetParents.length === 0) return;
+  if (targetParents.length === 0) return;
 
-  // Parent verileri
-  const entries = targetParents.map(p => {
-    const children = getChildNodesOfParent(p.id()) || [];
-    return {
-      parent: p,
-      children,
-      childCount: children.length,
-      parentSize: getNodeSize(p)
-    };
+  // Child sayısına göre sırala (çoktan aza)
+  const sortedParents = targetParents.sort((a, b) =>
+    getChildNodesOfParent(b.id()).length - getChildNodesOfParent(a.id()).length
+  );
+
+  let currentY = 0;
+  let groupBottomYs = [];
+
+  sortedParents.forEach(parent => {
+    const parentSize = getNodeSize(parent);
+    const parentOldX = parent.position('x');
+    const parentOldY = parent.position('y');
+    const children = getChildNodesOfParent(parent.id());
+
+    // Çocukların parent'a göre relatif offsetlerini kaydet
+    const childOffsets = children.map(ch => ({
+      node: ch,
+      dx: ch.position('x') - parentOldX,
+      dy: ch.position('y') - parentOldY,
+      size: getNodeSize(ch)
+    }));
+
+    // Grup için relatif bounding box hesapla
+    let minRelX = -parentSize.width / 2;
+    let maxRelX =  parentSize.width / 2;
+    let minRelY = -parentSize.height / 2;
+    let maxRelY =  parentSize.height / 2;
+
+    childOffsets.forEach(o => {
+      const w = o.size.width, h = o.size.height;
+      const left   = o.dx - w / 2;
+      const right  = o.dx + w / 2;
+      const top    = o.dy - h / 2;
+      const bottom = o.dy + h / 2;
+      if (left   < minRelX) minRelX = left;
+      if (right  > maxRelX) maxRelX = right;
+      if (top    < minRelY) minRelY = top;
+      if (bottom > maxRelY) maxRelY = bottom;
+    });
+
+    const groupWidth  = maxRelX - minRelX;
+    const groupHeight = maxRelY - minRelY;
+
+    // Parent'in yeni Y'sini belirle
+    const newParentY = currentY - minRelY;
+
+    // Parent'i x=0 merkezle
+    parent.position({ x: 0, y: newParentY });
+
+    // Çocukları relatif farkları koruyarak taşı
+    childOffsets.forEach(o => {
+      o.node.position({
+        x: 0 + o.dx,
+        y: newParentY + o.dy
+      });
+    });
+
+    parent.data('computedGroupWidth', groupWidth);
+    parent.data('computedGroupHeight', groupHeight);
+
+    // Bu grubun alt sınırı (mutlak Y)
+    const groupBottomY = newParentY + maxRelY;
+    groupBottomYs.push(groupBottomY);
+
+    currentY += groupHeight + VERTICAL_GROUP_GAP + 300;
   });
 
-  // Child sayısına göre (çok -> az) sırala
-  entries.sort((a, b) => b.childCount - a.childCount);
-
-  // Row oluşturma (>=7 tek, <=6 ikili)
-  const rows = [];
-  for (let i = 0; i < entries.length; ) {
-    const cur = entries[i];
-    if (cur.childCount >= 7) {
-      rows.push([cur]);
-      i += 1;
-    } else {
-      const next = entries[i + 1];
-      if (next && next.childCount <= 6) {
-        rows.push([cur, next]);
-        i += 2;
-      } else {
-        rows.push([cur]);
-        i += 1;
-      }
-    }
-  }
-
-  // Bir parent'ın (child grid dahil) en geniş satır genişliğini hesapla
-  function computeLayoutWidth(entry) {
-    const { parent, children, parentSize } = entry;
-    if (!children || children.length === 0) return parentSize.width;
-    const pattern = getChildRowPattern(children.length);
-    let idx = 0;
-    let maxRowWidth = 0;
-
-    pattern.forEach(rowCount => {
-      const rowKids = children.slice(idx, idx + rowCount);
-      idx += rowCount;
-      let rowWidth = 0;
-      rowKids.forEach((n, i) => {
-        const sz = getNodeSize(n);
-        rowWidth += sz.width;
-        if (i > 0) rowWidth += CHILD_COL_H_GAP;
-      });
-      if (rowWidth > maxRowWidth) maxRowWidth = rowWidth;
+  // --- Sensor ve Actuator gruplarının alt sınırlarını da bul ---
+  const sensorParents = parentNodes.filter(p => p.data('componenttype') === "Sensor");
+  sensorParents.forEach(parent => {
+    const parentSize = getNodeSize(parent);
+    const children = getChildNodesOfParent(parent.id());
+    let maxChildY = parent.position('y');
+    children.forEach(n => {
+      const nSize = getNodeSize(n);
+      const childBottomY = n.position('y') + nSize.height / 2;
+      if (childBottomY > maxChildY) maxChildY = childBottomY;
     });
-
-    return Math.max(parentSize.width, maxRowWidth);
-  }
-
-  // Bir parent’ın child’larını grid’e yerleştir
-  function layoutChildren(entry) {
-    const { parent, parentSize, children } = entry;
-    if (!children || children.length === 0) {
-      return parent.position('y') + parentSize.height / 2;
-    }
-
-    const parentPos = parent.position();
-    const parentBottom = parentPos.y + parentSize.height / 2;
-
-    const pattern = getChildRowPattern(children.length);
-
-    // Satırları oluştur
-    let idx = 0;
-    const rows = pattern.map(cnt => {
-      const slice = children.slice(idx, idx + cnt);
-      idx += cnt;
-      return slice;
-    });
-
-    // Satır metrikleri
-    const rowMetrics = rows.map(rowKids => {
-      const sizes = rowKids.map(n => getNodeSize(n));
-      const maxH = sizes.reduce((m, s) => Math.max(m, s.height), 0);
-      const totalW = sizes.reduce((sum, s, i) => sum + s.width + (i > 0 ? CHILD_COL_H_GAP : 0), 0);
-      return { sizes, maxH, totalW };
-    });
-
-    let currentTop = parentBottom + CHILD_FIRST_ROW_OFFSET;
-    let overallBottom = parentBottom;
-
-    rows.forEach((rowKids, rIndex) => {
-      const { sizes, maxH, totalW } = rowMetrics[rIndex];
-      const startX = parentPos.x - totalW / 2;
-      let cursorX = startX;
-      const rowCenterY = currentTop + maxH / 2;
-
-      rowKids.forEach((node, i) => {
-        const sz = sizes[i];
-        const cx = cursorX + sz.width / 2;
-        node.position({ x: cx, y: rowCenterY });
-        cursorX += sz.width + CHILD_COL_H_GAP;
-      });
-
-      const rowBottom = currentTop + maxH;
-      if (rowBottom > overallBottom) overallBottom = rowBottom;
-      currentTop = rowBottom + CHILD_ROW_V_GAP;
-    });
-
-    return overallBottom;
-  }
-
-  // --- Yerleştirme döngüsü ---
-  let currentYTop = 0; // Bir sonraki satırın parent üst kenarı
-
-  cy.batch(() => {
-    rows.forEach(row => {
-      // Satırın toplam genişliği
-      const widths = row.map(e => computeLayoutWidth(e));
-      let totalWidth;
-      if (row.length === 1) {
-        totalWidth = widths[0];
-      } else {
-        totalWidth = widths[0] + SMALL_PARENT_HORIZONTAL_GAP + widths[1];
-      }
-      const leftX = CENTER_X - totalWidth / 2;
-
-      // Parent merkez X’leri
-      const centers = [];
-      if (row.length === 1) {
-        centers.push(leftX + widths[0] / 2);
-      } else {
-        const c1 = leftX + widths[0] / 2;
-        const c2 = c1 + widths[0] / 2 + SMALL_PARENT_HORIZONTAL_GAP + widths[1] / 2;
-        centers.push(c1, c2);
-      }
-
-      // Parent'ları yerleştir (üst kenar currentYTop)
-      row.forEach((entry, idx) => {
-        const py = currentYTop + entry.parentSize.height / 2;
-        entry.parent.position({ x: centers[idx], y: py });
-      });
-
-      // Child grid ve satır alt sınırı
-      let rowBottom = currentYTop;
-      row.forEach(entry => {
-        const bottom = layoutChildren(entry);
-        if (bottom > rowBottom) rowBottom = bottom;
-      });
-
-      currentYTop = rowBottom + ROW_VERTICAL_GAP;
-    });
+    const parentBottomY = parent.position('y') + parentSize.height / 2;
+    groupBottomYs.push(Math.max(maxChildY, parentBottomY));
   });
 
-  // (İsteğe bağlı) Tamamlandığını event ile duyurmak istersen:
-  // cy.emit('layoutready');
+  const actuatorParents = parentNodes.filter(p => p.data('componenttype') === "Actuator");
+  actuatorParents.forEach(parent => {
+    const parentSize = getNodeSize(parent);
+    const children = getChildNodesOfParent(parent.id());
+    let maxChildY = parent.position('y');
+    children.forEach(n => {
+      const nSize = getNodeSize(n);
+      const childBottomY = n.position('y') + nSize.height / 2;
+      if (childBottomY > maxChildY) maxChildY = childBottomY;
+    });
+    const parentBottomY = parent.position('y') + parentSize.height / 2;
+    groupBottomYs.push(Math.max(maxChildY, parentBottomY));
+  });
+
+  // En büyük alt sınırı bul
+  const lowestBottomY = Math.max(...groupBottomYs, Number.NEGATIVE_INFINITY);
+
+  // --- Diğer parent grupları ve nodeleri yerleştir ---
+  const parentNodeses = cy.nodes().filter(n =>
+    n.data('originalType') === "allocationtargetfunml" &&
+    (
+      n.data('componenttype') === "ECU" ||
+      n.data('componenttype') === "Sensor" ||
+      n.data('componenttype') === "Actuator" ||
+      n.data('componenttype') === "Zusammenbau"
+    )
+  );
+  const localisedParentIds = new Set(parentNodeses.map(n => n.id()));
+  const localisedChildIds = new Set();
+  parentNodeses.forEach(parent => {
+    cy.nodes().forEach(n => {
+      if (n.data('parent') === parent.id()) localisedChildIds.add(n.id());
+    });
+  });
+  const excludedIds = new Set([...localisedParentIds, ...localisedChildIds]);
+  const unlocalisedNodes = cy.nodes().filter(n => !excludedIds.has(n.id()));
+
+  if (unlocalisedNodes.length > 0) {
+    // Artık en alttan başlıyoruz!
+    const startY = lowestBottomY + 750;
+
+    // 1. Parent'lı ve parent'sız nodeleri ayır
+    const parentGroups = [];
+    const singles = [];
+    const unlocalisedParents = unlocalisedNodes.filter(n => getChildNodesOfParent(n.id()).length > 0);
+    const usedNodeIds = new Set();
+    unlocalisedParents.forEach(parent => {
+      const children = getChildNodesOfParent(parent.id()).filter(n => unlocalisedNodes.some(un => un.id() === n.id()));
+      parentGroups.push({ parent, children });
+      usedNodeIds.add(parent.id());
+      children.forEach(n => usedNodeIds.add(n.id()));
+    });
+    unlocalisedNodes.forEach(n => {
+      if (!usedNodeIds.has(n.id())) {
+        singles.push(n);
+      }
+    });
+
+    // 2. Grupların toplam genişliğini ve başlama noktasını hesapla
+    let totalGroupsWidth = 0;
+    const groupWidths = [];
+    parentGroups.forEach(({ parent, children }, i) => {
+      const parentSize = getNodeSize(parent);
+      const childrenWidth = children.reduce((sum, n, idx) => {
+        const size = getNodeSize(n);
+        return sum + size.width + (idx > 0 ? CHILD_PADDING : 0); // DÜZEN: actuator gibi spacing
+      }, 0);
+      const groupWidth = Math.max(parentSize.width, childrenWidth);
+      groupWidths.push(groupWidth);
+      totalGroupsWidth += groupWidth;
+      if (i > 0) totalGroupsWidth += CHILD_PADDING;
+    });
+
+    let startX = -totalGroupsWidth / 2;
+
+    parentGroups.forEach(({ parent, children }, i) => {
+      const parentSize = getNodeSize(parent);
+      const childrenWidth = children.reduce((sum, n, idx) => {
+        const size = getNodeSize(n);
+        return sum + size.width + (idx > 0 ? CHILD_PADDING : 0); // DÜZEN: actuator gibi spacing
+      }, 0);
+      const groupWidth = groupWidths[i];
+
+      // Parent'i ortala
+      parent.position({
+        x: startX + groupWidth / 2,
+        y: startY - parentSize.height / 2 - CHILD_SIDE_PADDING // parent biraz yukarıda, actuator grid mantığıyla
+      });
+
+      // Child'ları parent'in altına, yan yana ortala
+      let childStartX = startX + groupWidth / 2 - childrenWidth / 2;
+      const childY = startY + parentSize.height / 2 + CHILD_SIDE_PADDING;
+      children.forEach((n, idx) => {
+        const size = getNodeSize(n);
+        n.position({
+          x: childStartX + size.width / 2,
+          y: childY
+        });
+        childStartX += size.width + CHILD_PADDING;
+      });
+
+      startX += groupWidth + CHILD_PADDING;
+    });
+
+    // 3. Parent'i olmayan nodeleri EN SAĞA hizala
+    let singlesStartX = startX;
+    singles.forEach((node, i) => {
+      const size = getNodeSize(node);
+      node.position({
+        x: singlesStartX + size.width / 2 + 200,
+        y: startY
+      });
+      singlesStartX += size.width + 500;
+    });
+  }
+
+  // --- Diğer parent'lar için child node'ları hizala ---
+  parentNodes.forEach(parent => {
+    const type = parent.data('componenttype');
+    if (type === "Sensor" || type === "Actuator") {
+      // Sensor ve Actuator tipi yukarıda özel sırada işlendi!
+      return;
+    }
+    const childNodes = getChildNodesOfParent(parent.id());
+    if (childNodes.length === 0) return;
+
+    // Parent'in EN GÜNCEL pozisyonunu al!
+    const px = parent.position('x');
+    const py = parent.position('y');
+
+    if (type === "ECU" || type === "Zusammenbau") {
+      // YATAY hizalama: Parent’in altına, ortalı şekilde child’ları actuator spacing ile sırala
+      const totalWidth = childNodes.reduce((sum, n, i) => {
+        const size = getNodeSize(n);
+        return sum + size.width + (i > 0 ? CHILD_PADDING : 0);
+      }, 0);
+
+      let startX = px - totalWidth / 2;
+      let y = py + ECU_CHILD_OFFSET_Y; // Parent'in hemen altı (düzen: actuator grid mantığı)
+
+      childNodes.forEach((n, i) => {
+        const size = getNodeSize(n);
+        n.position({ x: startX + size.width / 2 + ECU_CHILD_OFFSET_X, y: y + size.height / 2 });
+        startX += size.width + CHILD_PADDING;
+      });
+    }
+  });
 })();
+
+
+
+
 
 
 
@@ -684,6 +683,4 @@ if (actuatorParents.length > 0) {
 
 
 }
-
-
 
