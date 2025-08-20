@@ -274,21 +274,6 @@
 
 
 
-
-
-    /* Grup çerçeveleri için CSS */
-    .group-frame {
-      transition: opacity 0.3s ease;
-    }
-
-    .group-header {
-      user-select: none;
-    }
-
-    .group-close-btn:hover {
-      transform: scale(1.1);
-    }
-
   </style>
 </head>
 <body>
@@ -390,9 +375,6 @@ document.getElementById('jsonFileInput').addEventListener('change', function(e) 
   reader.readAsText(file);
 });
 
-
-  // JSON yükleme işleminin sonunda, yeni layout uygulandıktan sonra
-  setTimeout(() => updateGroupFrames(cyInstance), 300);
 
 
       function findMostConnectedNode(cy) {
@@ -1289,8 +1271,7 @@ if (actuatorParents.length > 0) {
   })
 
 
-// Layout fonksiyonunun sonuna ekleyin
-setTimeout(() => updateGroupFrames(cyInstance), 200);
+
 
 
 
@@ -1921,197 +1902,6 @@ function updateNodesWithParentDataLive(cyInstance) {
         }, 10);
       }
     });
-
-
-    // Grup çerçevelerini oluşturan fonksiyon
-function createGroupFrames(cy) {
-  // Mevcut çerçeveleri temizle
-  const existingFrames = document.querySelectorAll('.group-frame');
-  existingFrames.forEach(frame => frame.remove());
-
-  // Grup tanımları
-  const groups = [
-    {
-      name: 'Sensor',
-      componentType: 'Sensor',
-      color: '#e60073'
-    },
-    {
-      name: 'ECU/Zusammenbau',
-      componentTypes: ['ECU', 'Zusammenbau'],
-      color: '#1976d2'
-    },
-    {
-      name: 'Actuator',
-      componentType: 'Actuator',
-      color: '#ff9800'
-    }
-  ];
-
-  groups.forEach(group => {
-    // Gruba ait node'ları bul
-    let groupNodes = [];
-    
-    if (group.componentTypes) {
-      // ECU/Zusammenbau için
-      groupNodes = cy.nodes().filter(node => {
-        const componentType = node.data('componenttype');
-        return group.componentTypes.includes(componentType);
-      });
-    } else {
-      // Sensor/Actuator için
-      groupNodes = cy.nodes().filter(node => {
-        return node.data('componenttype') === group.componentType;
-      });
-    }
-
-    // Bu gruba ait child node'ları da ekle
-    const allGroupNodes = [...groupNodes];
-    groupNodes.forEach(parentNode => {
-      const children = cy.nodes().filter(node => node.data('parent') === parentNode.id());
-      allGroupNodes.push(...children);
-    });
-
-    if (allGroupNodes.length === 0) return;
-
-    // Grup node'larının sınırlarını hesapla
-    let minX = Infinity, maxX = -Infinity;
-    let minY = Infinity, maxY = -Infinity;
-
-    allGroupNodes.forEach(node => {
-      const pos = node.renderedPosition();
-      const width = node.renderedWidth();
-      const height = node.renderedHeight();
-      
-      const nodeMinX = pos.x - width / 2;
-      const nodeMaxX = pos.x + width / 2;
-      const nodeMinY = pos.y - height / 2;
-      const nodeMaxY = pos.y + height / 2;
-
-      if (nodeMinX < minX) minX = nodeMinX;
-      if (nodeMaxX > maxX) maxX = nodeMaxX;
-      if (nodeMinY < minY) minY = nodeMinY;
-      if (nodeMaxY > maxY) maxY = nodeMaxY;
-    });
-
-    // Çerçeve boyutları ve konumu
-    const frameWidth = maxX - minX + 100; // 50px padding her iki tarafa
-    const frameHeight = maxY - minY + 150; // 50px alt, 100px üst padding
-    const frameX = minX - 50;
-    const frameY = minY - 100;
-
-    // Çerçeve merkezi (başlık için)
-    const centerX = (minX + maxX) / 2;
-    const headerY = minY - 50;
-
-    // Çerçeve elemanını oluştur
-    const frameContainer = document.createElement('div');
-    frameContainer.className = 'group-frame';
-    frameContainer.style.cssText = `
-      position: absolute;
-      left: ${frameX}px;
-      top: ${frameY}px;
-      width: ${frameWidth}px;
-      height: ${frameHeight}px;
-      border: 3px solid ${group.color};
-      border-radius: 12px;
-      background-color: rgba(255, 255, 255, 0.1);
-      pointer-events: none;
-      z-index: 5;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
-    `;
-
-    // Başlık elemanını oluştur
-    const headerElement = document.createElement('div');
-    headerElement.className = 'group-header';
-    headerElement.style.cssText = `
-      position: absolute;
-      left: ${centerX - frameX - 75}px;
-      top: 15px;
-      width: 150px;
-      height: 35px;
-      background-color: ${group.color};
-      color: white;
-      font-weight: bold;
-      font-size: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 8px;
-      pointer-events: auto;
-      cursor: default;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    `;
-    headerElement.textContent = group.name;
-
-    // Kapatma butonu
-    const closeButton = document.createElement('button');
-    closeButton.className = 'group-close-btn';
-    closeButton.style.cssText = `
-      position: absolute;
-      right: 8px;
-      top: 8px;
-      width: 25px;
-      height: 25px;
-      background-color: rgba(255, 255, 255, 0.9);
-      border: 1px solid #ccc;
-      border-radius: 50%;
-      color: #666;
-      font-size: 16px;
-      font-weight: bold;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      pointer-events: auto;
-      transition: all 0.2s ease;
-    `;
-    closeButton.innerHTML = '×';
-    closeButton.title = `${group.name} çerçevesini kapat`;
-
-    // Kapatma butonu hover efekti
-    closeButton.addEventListener('mouseenter', () => {
-      closeButton.style.backgroundColor = '#f44336';
-      closeButton.style.color = 'white';
-    });
-    closeButton.addEventListener('mouseleave', () => {
-      closeButton.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
-      closeButton.style.color = '#666';
-    });
-
-    // Kapatma butonu tıklama eventi
-    closeButton.addEventListener('click', () => {
-      frameContainer.remove();
-    });
-
-    // Elemanları birleştir
-    frameContainer.appendChild(headerElement);
-    frameContainer.appendChild(closeButton);
-
-    // Cytoscape container'ına ekle
-    const cyContainer = cy.container();
-    cyContainer.appendChild(frameContainer);
-  });
-}
-
-    // Çerçeveleri güncelleme fonksiyonu (zoom, pan değişikliklerinde)
-    function updateGroupFrames(cy) {
-      // Mevcut çerçeveleri kaldır ve yeniden oluştur
-      createGroupFrames(cy);
-    }
-
-    // Cytoscape olaylarına bağla
-    function setupGroupFrameEvents(cy) {
-      // Zoom, pan ve layout değişikliklerinde çerçeveleri güncelle
-      cy.on('zoom pan', () => {
-        setTimeout(() => updateGroupFrames(cy), 50);
-      });
-
-      // Layout tamamlandığında çerçeveleri güncelle
-      cy.on('layoutstop', () => {
-        setTimeout(() => updateGroupFrames(cy), 100);
-      });
-    }
 
 
     
