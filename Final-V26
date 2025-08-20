@@ -457,12 +457,12 @@ function setupFrameEventListeners() {
     });
     
     // Layout değişikliklerinde çerçeveleri güncelle
-    cyInstance.on('layoutstop', updateGroupFrames);
+    cyInstance.on('layoutstop', debouncedUpdateGroupFrames);
     
-    // Node pozisyon değişikliklerinde çerçeveleri güncelle
+    // Node pozisyon değişikliklerinde çerçeveleri güncelle - OPTIMIZED WITH DEBOUNCING
     cyInstance.on('position', 'node', function(evt) {
       if (!evt.target.data('isFrame') && !evt.target.data('isFrameClose')) {
-        setTimeout(updateGroupFrames, 100);
+        debouncedUpdateGroupFrames();
       }
     });
     
@@ -653,15 +653,92 @@ function countLabelLines(label) {
 
 
 
+// === BATCH OPERATIONS UTILITY FUNCTIONS ===
+function debounce(func, wait) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
+
+function showLoadingIndicator() {
+  // Create loading overlay if it doesn't exist
+  let loadingDiv = document.getElementById('layout-loading');
+  if (!loadingDiv) {
+    loadingDiv = document.createElement('div');
+    loadingDiv.id = 'layout-loading';
+    loadingDiv.innerHTML = `
+      <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.8); z-index: 10000; display: flex; align-items: center; justify-content: center;">
+        <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+          <div style="font-size: 18px; margin-bottom: 10px;">Applying Layout...</div>
+          <div style="width: 200px; height: 4px; background: #e0e0e0; border-radius: 2px; overflow: hidden;">
+            <div id="progress-bar" style="width: 0%; height: 100%; background: #1976d2; transition: width 0.3s;"></div>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(loadingDiv);
+  }
+  loadingDiv.style.display = 'flex';
+  return loadingDiv;
+}
+
+function hideLoadingIndicator() {
+  const loadingDiv = document.getElementById('layout-loading');
+  if (loadingDiv) {
+    loadingDiv.style.display = 'none';
+  }
+}
+
+function updateProgress(percentage) {
+  const progressBar = document.getElementById('progress-bar');
+  if (progressBar) {
+    progressBar.style.width = percentage + '%';
+  }
+}
+
+// Batch position update utility
+function batchUpdatePositions(cy, positionUpdates) {
+  if (positionUpdates.length === 0) return;
+  
+  cy.batch(() => {
+    positionUpdates.forEach(update => {
+      if (update.node && update.position) {
+        update.node.position(update.position);
+      }
+    });
+  });
+}
+
+// Debounced frame update function
+const debouncedUpdateGroupFrames = debounce(() => {
+  if (typeof updateGroupFrames === 'function') {
+    updateGroupFrames();
+  }
+}, 250);
+
 // ---- YENİ CUSTOM LAYOUT ALGORITHM (çakışmasız ve ortalanmış) ----
-// ---- YENİ CUSTOM LAYOUT ALGORITHM (çakışmasız ve ortalanmış) ----
+// ---- OPTIMIZED WITH BATCH OPERATIONS ----
 function applyCustomLayoutForAllocationTargets(cy) {
+  const startTime = performance.now();
+  console.log('🚀 Starting layout with batch operations...');
+  
+  showLoadingIndicator();
+  updateProgress(10);
   // CHILD_PADDING ve VERTICAL_CHILD_PADDING iki katına çıkarıldı!
   const CHILD_PADDING = 450; // Child node'lar arası boşluk (2 kat)
   const CHILD_SIDE_PADDING = 150; // Parent-child kenar boşlukları (child'lar arası dikeyde de kullanılacak)
   const VERTICAL_CHILD_PADDING = 50; // Sensor/Actuator child'ları arası dikey boşluk (2 kat)
   const CHILD_SIDE_PADDING_SENSOR = 250;
   const CHILD_SIDE_PADDING_ACTUATOR = 250;
+
+  // Batch position updates collection
+  const positionUpdates = [];
 
   function getNodeSize(n) {
     const label = n.data('label') || '';
@@ -851,8 +928,11 @@ function applyCustomLayoutForAllocationTargets(cy) {
         const parentX = startX + totalWidth / 2;
         const parentY = currentY + parentSize.height / 2;
         
-        // Parent'ı konumlandır
-        parent.position({ x: parentX, y: parentY });
+        // Parent'ı konumlandır - ADD TO BATCH INSTEAD OF IMMEDIATE UPDATE
+        positionUpdates.push({
+          node: parent,
+          position: { x: parentX, y: parentY }
+        });
 
         // Child'ları grid düzeninde konumlandır
         if (children.length > 0) {
@@ -872,7 +952,11 @@ function applyCustomLayoutForAllocationTargets(cy) {
                 const childX = rowStartX + colIndex * (maxChildWidth + CHILD_PADDING) + maxChildWidth / 2;
                 const childY = gridStartY + rowIndex * (maxChildHeight + VERTICAL_CHILD_PADDING) + maxChildHeight / 2;
                 
-                child.position({ x: childX, y: childY });
+                // ADD CHILD TO BATCH INSTEAD OF IMMEDIATE UPDATE
+                positionUpdates.push({
+                  node: child,
+                  position: { x: childX, y: childY }
+                });
                 childIndex++;
               }
             }
@@ -951,10 +1035,13 @@ function applyCustomLayoutForAllocationTargets(cy) {
         }, 0);
         const groupWidth = groupWidths[i];
 
-        // Parent'i ortala
-        parent.position({
-          x: startX + groupWidth / 2,
-          y: startY - parentSize.height / 2 - CHILD_SIDE_PADDING
+        // Parent'i ortala - ADD TO BATCH INSTEAD OF IMMEDIATE UPDATE
+        positionUpdates.push({
+          node: parent,
+          position: {
+            x: startX + groupWidth / 2,
+            y: startY - parentSize.height / 2 - CHILD_SIDE_PADDING
+          }
         });
 
         // Child'ları parent'in altına, yan yana ortala
@@ -962,9 +1049,12 @@ function applyCustomLayoutForAllocationTargets(cy) {
         const childY = startY + parentSize.height / 2 + CHILD_SIDE_PADDING;
         children.forEach((n, idx) => {
           const size = getNodeSize(n);
-          n.position({
-            x: childStartX + size.width / 2,
-            y: childY
+          positionUpdates.push({
+            node: n,
+            position: {
+              x: childStartX + size.width / 2,
+              y: childY
+            }
           });
           childStartX += size.width + CHILD_PADDING;
         });
@@ -976,13 +1066,24 @@ function applyCustomLayoutForAllocationTargets(cy) {
       let singlesStartX = startX;
       singles.forEach((node, i) => {
         const size = getNodeSize(node);
-        node.position({
-          x: singlesStartX + size.width / 2 + 200,
-          y: startY
+        positionUpdates.push({
+          node: node,
+          position: {
+            x: singlesStartX + size.width / 2 + 200,
+            y: startY
+          }
         });
         singlesStartX += size.width + 500;
       });
     }
+    
+    // Apply the first batch of position updates for ECU/Zusammenbau
+    updateProgress(30);
+    console.log(`📍 Applying ${positionUpdates.length} position updates for ECU/Zusammenbau...`);
+    batchUpdatePositions(cy, positionUpdates);
+    
+    // Clear the position updates array for next section
+    positionUpdates.length = 0;
   })();
 
   // --- SENSOR GRUPLARI (SOL - X=-13000) ---
@@ -1148,8 +1249,11 @@ function applyCustomLayoutForAllocationTargets(cy) {
         const parentX = startX + totalWidth / 2;
         const parentY = currentY + parentSize.height / 2;
         
-        // Parent'ı konumlandır
-        parent.position({ x: parentX, y: parentY });
+        // Parent'ı konumlandır - ADD TO BATCH INSTEAD OF IMMEDIATE UPDATE
+        positionUpdates.push({
+          node: parent,
+          position: { x: parentX, y: parentY }
+        });
 
         // Child'ları grid düzeninde konumlandır
         if (children.length > 0) {
@@ -1169,11 +1273,17 @@ function applyCustomLayoutForAllocationTargets(cy) {
                 const childX = rowStartX + colIndex * (maxChildWidth + CHILD_PADDING) + maxChildWidth / 2;
                 const childY = gridStartY + rowIndex * (maxChildHeight + VERTICAL_CHILD_PADDING) + maxChildHeight / 2;
                 
-                // SADECE İLK ÇALIŞTIRMADA X DEĞERİNİ 0'A ÇEK
+                // SADECE İLK ÇALIŞTIRMADA X DEĞERİNİ 0'A ÇEK - ADD TO BATCH
                 if (window.firstSensorLayoutRun) {
-                  child.position({ x: 0, y: childY });
+                  positionUpdates.push({
+                    node: child,
+                    position: { x: 0, y: childY }
+                  });
                 } else {
-                  child.position({ x: childX, y: childY });
+                  positionUpdates.push({
+                    node: child,
+                    position: { x: childX, y: childY }
+                  });
                 }
                 childIndex++;
               }
@@ -1189,6 +1299,14 @@ function applyCustomLayoutForAllocationTargets(cy) {
 
     // İlk çalıştırmadan sonra flag'i false yap
     window.firstSensorLayoutRun = false;
+    
+    // Apply batch updates for Sensor nodes
+    updateProgress(50);
+    console.log(`📍 Applying ${positionUpdates.length} position updates for Sensor nodes...`);
+    batchUpdatePositions(cy, positionUpdates);
+    
+    // Clear the position updates array for next section
+    positionUpdates.length = 0;
   })();
 
   // --- ACTUATOR GRUPLARI (SAĞ - X=+10000) ---
@@ -1354,8 +1472,11 @@ function applyCustomLayoutForAllocationTargets(cy) {
         const parentX = startX + totalWidth / 2;
         const parentY = currentY + parentSize.height / 2;
         
-        // Parent'ı konumlandır
-        parent.position({ x: parentX, y: parentY });
+        // Parent'ı konumlandır - ADD TO BATCH INSTEAD OF IMMEDIATE UPDATE
+        positionUpdates.push({
+          node: parent,
+          position: { x: parentX, y: parentY }
+        });
 
         // Child'ları grid düzeninde konumlandır
         if (children.length > 0) {
@@ -1375,11 +1496,17 @@ function applyCustomLayoutForAllocationTargets(cy) {
                 const childX = rowStartX + colIndex * (maxChildWidth + CHILD_PADDING) + maxChildWidth / 2;
                 const childY = gridStartY + rowIndex * (maxChildHeight + VERTICAL_CHILD_PADDING) + maxChildHeight / 2;
                 
-                // SADECE İLK ÇALIŞTIRMADA X DEĞERİNİ 0'A ÇEK
+                // SADECE İLK ÇALIŞTIRMADA X DEĞERİNİ 0'A ÇEK - ADD TO BATCH
                 if (window.firstActuatorLayoutRun) {
-                  child.position({ x: 0, y: childY });
+                  positionUpdates.push({
+                    node: child,
+                    position: { x: 0, y: childY }
+                  });
                 } else {
-                  child.position({ x: childX, y: childY });
+                  positionUpdates.push({
+                    node: child,
+                    position: { x: childX, y: childY }
+                  });
                 }
                 childIndex++;
               }
@@ -1395,6 +1522,14 @@ function applyCustomLayoutForAllocationTargets(cy) {
 
     // İlk çalıştırmadan sonra flag'i false yap
     window.firstActuatorLayoutRun = false;
+    
+    // Apply batch updates for Actuator nodes
+    updateProgress(70);
+    console.log(`📍 Applying ${positionUpdates.length} position updates for Actuator nodes...`);
+    batchUpdatePositions(cy, positionUpdates);
+    
+    // Clear the position updates array for final section
+    positionUpdates.length = 0;
   })();
 
   // --- Diğer parent'lar için child node'ları hizala ---
@@ -1411,6 +1546,29 @@ function applyCustomLayoutForAllocationTargets(cy) {
     const px = parent.position('x');
     const py = parent.position('y');
   });
+  
+  // Final batch update for any remaining position changes
+  if (positionUpdates.length > 0) {
+    updateProgress(90);
+    console.log(`📍 Applying final ${positionUpdates.length} position updates...`);
+    batchUpdatePositions(cy, positionUpdates);
+  }
+  
+  // Complete loading and show performance results
+  updateProgress(100);
+  const endTime = performance.now();
+  const duration = endTime - startTime;
+  console.log(`✅ Layout completed in ${duration.toFixed(2)}ms`);
+  
+  // Hide loading indicator after a short delay to show completion
+  setTimeout(() => {
+    hideLoadingIndicator();
+    
+    // Update frames after layout completion using debounced function
+    setTimeout(() => {
+      debouncedUpdateGroupFrames();
+    }, 100);
+  }, 500);
 }
 
 
@@ -2182,8 +2340,12 @@ document.getElementById('jsonFileInput').addEventListener('change', function(e) 
         showErrorPanel('Bitte erst eine JSON Datei hochladen!');
         return;
       }
+      
+      // OPTIMIZED: Single call with batch operations
       applyCustomLayoutForAllocationTargets(cyInstance);
-      applyCustomLayoutForAllocationTargets(cyInstance);
+      
+      // Use batch operations for layout data updates
+      const layoutDataUpdates = [];
       cyInstance.nodes().forEach(function (node) {
         if (node.data('originalType') === "allocationtargetfunml") {
           const size = getNodeSize(node);
@@ -2193,12 +2355,9 @@ document.getElementById('jsonFileInput').addEventListener('change', function(e) 
           node.data('layout_height', size.height);
         }
       });
-      setTimeout(() => {
-        updateGroupFrames();
-      }, 500);
+      
+      // The optimized layout function already handles frame updates
       updateNodesWithParentDataLive();
-          // Layout sonrası çerçeveleri güncelle
-
     }
 
 
@@ -2404,31 +2563,8 @@ document.getElementById('frameToggleBtn').addEventListener('click', toggleFrames
 
 
 
-// Layout değişikliklerinde çerçeveleri güncelle
-cyInstance.on('layoutstop', updateGroupFrames);
-cyInstance.on('position', 'node', function(evt) {
-  if (!evt.target.data('isFrame') && !evt.target.data('isFrameClose')) {
-    // Sadece normal node'lar hareket ettiğinde güncelle
-    setTimeout(updateGroupFrames, 100);
-  }
-});
-
-
-// Cytoscape event listener'ları - cyInstance oluşturulduktan sonra eklenecek
-if (cyInstance) {
-
-  
-  // Layout değişikliklerinde çerçeveleri güncelle
-  cyInstance.on('layoutstop', updateGroupFrames);
-  
-  // Node pozisyon değişikliklerinde çerçeveleri güncelle
-  cyInstance.on('position', 'node', function(evt) {
-    if (!evt.target.data('isFrame') && !evt.target.data('isFrameClose')) {
-      // Sadece normal node'lar hareket ettiğinde güncelle
-      setTimeout(updateGroupFrames, 100);
-    }
-  });
-}
+// Layout değişikliklerinde çerçeveleri güncelle - REMOVED DUPLICATES, USING DEBOUNCED VERSION
+// These will be set up in setupFrameEventListeners() function
 
 
 
